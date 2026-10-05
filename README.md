@@ -119,6 +119,33 @@ The model is built on telemetry collected from a **BMW i3 electric vehicle equip
 2. **Computational Efficiency**: Training takes only **19.9 seconds** for 25 trees compared to **88.7 seconds** for 100 trees (over 4× faster).
 3. **Embedded Footprint**: The serialized model is **43.2 MB**, making it suitable for onboard edge deployment in EV control units, whereas 100-tree models consume hundreds of megabytes with negligible accuracy difference.
 
+### 🏆 Baseline Benchmarking: Random Forest vs. Baselines
+
+To rigorously evaluate the necessity and advantages of the ensemble Random Forest, two distinct baselines were implemented under an identical experimental setup (same 60-trip training split of 945,026 instances and 10-trip test split of 118,974 instances):
+1. **Decision Tree (Single Tree)**: Evaluates a single decision tree with identical tree regularization (`max_features='sqrt'`, `min_samples_leaf=5`) across 5 random seeds to measure the variance reduction and stabilization of ensemble bagging.
+2. **K-Nearest Neighbors ($k=5$, Distance-Weighted)**: An instance-based non-parametric baseline operating with `StandardScaler` feature normalization and KD-Tree spatial indexing.
+
+#### Head-to-Head Comparison on Unseen Driving Cycles (10 Trips, 118,974 Test Samples)
+
+| Metric | Random Forest (25 Trees) | K-Nearest Neighbors ($k=5$) | Decision Tree (Single Tree) | RF Improvement vs. KNN | RF Improvement vs. DT |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **RMSE** | **`5.8876%`** | `7.0826%` | `7.0223%` | **16.87% lower error** | **16.16% lower error** |
+| **MAE** | **`4.3736%`** | `5.4040%` | `5.2075%` | **19.07% lower error** | **16.01% lower error** |
+| **Max Error** | **`26.6956%`** | `29.1223%` | `41.7567%` | **8.33% lower error** | **36.07% lower error** |
+| **Std Dev** | **`5.8876%`** | `7.0668%` | `7.0162%` | **16.69% lower variance** | **16.09% lower variance** |
+
+#### BMS Engineering Takeaways: Why Random Forest Wins
+
+1. **Superior Predictive Accuracy**:
+   - Random Forest cuts root mean squared error by **`16.87%`** and mean absolute error by **`19.07%`** compared to KNN.
+   - It cuts RMSE by **`16.16%`** and MAE by **`16.01%`** compared to a single Decision Tree.
+2. **36% Reduction in Catastrophic Peak Error (vs. Decision Tree)**:
+   - A single Decision Tree suffered a dangerous worst-case residual error of **`41.76%`** during sudden acceleration and regenerative dynamics. In a physical vehicle, this error magnitude could trigger premature shutdown or over-discharge.
+   - By aggregating 25 decorrelated trees, Random Forest compresses maximum error to **`26.70%`** (a **`36.07%` reduction**).
+3. **Automotive Microcontroller Constraints (vs. KNN)**:
+   - **Memory Bottleneck**: KNN requires storing all 945,026 training vectors (~15+ MB raw float data plus tree indexing structures) in RAM. Automotive ECUs (e.g., Infineon AURIX, TI TMS570) typically feature only a few megabytes of total RAM. Random Forest requires zero training vector retention.
+   - **Inference Latency**: KNN computes Euclidean distance searches across multi-dimensional partitions for every single prediction cycle. Random Forest traverses lightweight binary comparison trees (`if x <= threshold`) within microseconds.
+
 ---
 
 ## 📂 Project Structure
@@ -128,37 +155,43 @@ EV_HEV/
 ├── archive/                         # Raw dataset (70 trip CSV files + metadata)
 │   ├── TripA01.csv ... TripA32.csv
 │   └── TripB01.csv ... TripB38.csv
-├── Random_Forest/
+├── Random_Forest/                   # Main proposed ensemble architecture
 │   ├── results/
 │   │   ├── models/
-│   │   │   └── rf_25_trees_final.joblib # Serialised final best model (43.2 MB)
-│   │   ├── plots/
-│   │   │   ├── soc_estimation_rf.png    # Actual vs Predicted SOC curves
-│   │   │   ├── prediction_error_rf.png  # Error residuals over all test instances
-│   │   │   ├── feature_importance_rf.png# Gini importance of the 4 input features
-│   │   │   ├── tree_count_comparison.png# Comparative analysis of tree configurations
-│   │   │   ├── error_by_soc_range.png   # Performance across SOC operational intervals
-│   │   │   ├── error_distribution.png   # Histogram & KDE of prediction errors
-│   │   │   └── per_trip_error.png       # Individual error breakdown across 10 test trips
-│   │   └── results.json                 # Complete numerical metrics for all runs
+│   │   │   └── rf_25_trees_final.joblib # Serialized best model (43.2 MB)
+│   │   ├── plots/                   # 7 publication-ready diagnostic charts
+│   │   └── results.json             # Metrics for all tree configurations & seeds
 │   └── src/
-│       ├── config.py                    # Central configuration, file paths, and hyperparameters
-│       ├── data_loader.py               # Robust CSV ingestion, header cleaning, and 60/10 split
-│       ├── evaluate.py                  # Evaluation metrics (RMSE, MAE, MAX ERROR, STD DEV)
-│       ├── model_rf.py                  # Training pipeline, multi-seed evaluation, and model extraction
-│       ├── plots.py                     # High-resolution figure generation
-│       └── main.py                      # Orchestrator script executing the full workflow
-└── README.md                        # Project documentation
+│       ├── config.py                # Hyperparameters, paths, and column standards
+│       ├── data_loader.py           # Robust ingestion, cleaning, and train/test split
+│       ├── evaluate.py              # Regression metrics (RMSE, MAE, Max Error, Std Dev)
+│       ├── model_rf.py              # Multi-seed training and model selection
+│       ├── plots.py                 # Figure generation suite
+│       └── main.py                  # End-to-end execution pipeline
+├── Decision_Tree/                   # Baseline 1: Single decision tree
+│   ├── results/
+│   │   ├── models/                  # Serialized single tree model
+│   │   ├── plots/                   # Single tree diagnostic & comparison plots
+│   │   └── results.json             # Single tree performance metrics & RF comparison
+│   ├── src/
+│   │   ├── config.py, model_dt.py, plots_dt.py, main.py
+│   └── README.md                    # Detailed Decision Tree documentation
+├── KNN/                             # Baseline 2: K-Nearest Neighbors
+│   ├── results/
+│   │   ├── models/                  # Serialized scaler + KNN pipeline
+│   │   ├── plots/                   # KNN diagnostic & comparison plots
+│   │   └── results.json             # KNN performance metrics & RF comparison
+│   ├── src/
+│   │   ├── config.py, model_knn.py, plots_knn.py, main.py
+│   └── README.md                    # Detailed KNN baseline documentation
+└── README.md                        # Master repository documentation
 ```
 
 ### Module Responsibilities
 
-- **`Random_Forest/src/config.py`**: Declares all filesystem paths, standardized column names, feature lists, train/test trip split ratios, and default Random Forest parameters (`criterion`, `max_features`, `min_samples_leaf`, `n_jobs`).
-- **`Random_Forest/src/data_loader.py`**: Handles parsing of semicolon-separated, Latin-1 encoded CSV files. Resolves irregular column name encodings, filters missing/NaN values, and partitions trips into 60 training and 10 testing DataFrames.
-- **`Random_Forest/src/evaluate.py`**: Computes standard regression metrics (RMSE, MAE, Maximum Error, and Error Standard Deviation) and provides clean console formatting.
-- **`Random_Forest/src/model_rf.py`**: Manages model instantiation via scikit-learn, executes repeated training runs with varying seeds, and extracts optimal model weights.
-- **`Random_Forest/src/plots.py`**: Generates all evaluation figures using Matplotlib with properly scaled axes, clear labels, and publication-ready formatting.
-- **`Random_Forest/src/main.py`**: End-to-end driver that coordinates data loading, model exploration, metric comparison, artifact persistence, and plot rendering.
+- **`Random_Forest/`**: Contains the full implementation of the proposed 25-tree ensemble model, including hyperparameter grid exploration (25–100 trees), multi-seed evaluation, and extensive diagnostic visualizations.
+- **`Decision_Tree/`**: Isolates the single-tree baseline to demonstrate the empirical benefits of ensemble variance reduction and bagging.
+- **`KNN/`**: Implements standardized feature scaling and instance-based nearest-neighbor regression to benchmark against distance-based methods and analyze onboard ECU computational feasibility.
 
 ---
 
@@ -212,6 +245,18 @@ The script will:
 5. Write all performance metrics to `Random_Forest/results/results.json`.
 6. Render and save all 7 diagnostic charts into `Random_Forest/results/plots/`.
 
+### Running the Baselines
+
+Execute individual isolated baselines to reproduce the comparative benchmark:
+
+- **Decision Tree (Single Tree)**:
+  ```bash
+  python Decision_Tree/src/main.py
+  ```
+- **K-Nearest Neighbors (KNN)**:
+  ```bash
+  python KNN/src/main.py
+  ```
 
 ---
 

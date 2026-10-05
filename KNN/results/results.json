@@ -1,0 +1,40 @@
+{
+  "model_type": "KNeighborsRegressor (Distance-Weighted, KD-Tree)",
+  "knn_params": {
+    "n_neighbors": 5,
+    "weights": "distance",
+    "algorithm": "kd_tree",
+    "leaf_size": 30,
+    "n_jobs": -1
+  },
+  "metrics": {
+    "RMSE": 7.082553644586786,
+    "MAE": 5.404024776206233,
+    "MAX_ERROR": 29.12229815616474,
+    "STD_DEV": 7.0667603826007515
+  },
+  "timing": {
+    "fit_time_seconds": 1.1819286346435547,
+    "inference_time_seconds": 2.0376250743865967,
+    "latency_per_sample_ms": 0.017126641740099487
+  },
+  "rf_comparison": {
+    "rf_metrics": {
+      "RMSE": 5.887644970626509,
+      "MAE": 4.373562967622623,
+      "MAX_ERROR": 26.69561532181781,
+      "STD_DEV": 5.887561813214363
+    },
+    "rmse_reduction_pct": 16.87115599715293,
+    "mae_reduction_pct": 19.06841384444987,
+    "max_error_reduction_pct": 8.332731233414819
+  },
+  "dt_comparison": {
+    "dt_metrics": {
+      "RMSE": 7.022348096381192,
+      "MAE": 5.207461371909559,
+      "MAX_ERROR": 41.75666666666668,
+      "STD_DEV": 7.016227132242459
+    }
+  }
+}

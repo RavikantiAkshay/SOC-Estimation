@@ -38,6 +38,8 @@ Random_Forest/results/models/*.joblib
 !Random_Forest/results/models/.gitkeep
 Decision_Tree/results/models/*.joblib
 !Decision_Tree/results/models/.gitkeep
+KNN/results/models/*.joblib
+!KNN/results/models/.gitkeep
 
 # Testing and coverage
 .pytest_cache/
