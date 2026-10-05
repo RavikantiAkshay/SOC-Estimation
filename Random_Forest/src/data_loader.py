@@ -18,14 +18,24 @@ import glob
 import numpy as np
 import pandas as pd
 
-from config import (
-    ARCHIVE_DIR,
-    CSV_SEPARATOR,
-    CSV_ENCODING,
-    PAPER_FEATURES,
-    TARGET_SOC,
-    NUM_TRAIN_TRIPS,
-)
+try:
+    from config import (
+        ARCHIVE_DIR,
+        CSV_SEPARATOR,
+        CSV_ENCODING,
+        PAPER_FEATURES,
+        TARGET_SOC,
+        NUM_TRAIN_TRIPS,
+    )
+except ImportError:
+    from Random_Forest.src.config import (
+        ARCHIVE_DIR,
+        CSV_SEPARATOR,
+        CSV_ENCODING,
+        PAPER_FEATURES,
+        TARGET_SOC,
+        NUM_TRAIN_TRIPS,
+    )
 
 
 # ----------------------------------------------
