@@ -1289,7 +1289,7 @@
         <p><strong>What to look for</strong>: Tight tracking throughout all driving cycles, including transitions
           between charging and discharging states.</p>
         <figure class="doc-image">
-          <img src="results/plots/soc_estimation_rf.png"
+          <img src="Random_Forest/results/plots/soc_estimation_rf.png"
             alt="SOC Estimation — Actual vs. Predicted SOC across 118,974 test instances" loading="lazy">
           <figcaption>SOC Estimation — Actual vs. Predicted SOC across 118,974 test instances</figcaption>
         </figure>
@@ -1300,7 +1300,7 @@
         <p><strong>What to look for</strong>: Most errors clustered near 0%, with occasional spikes during rapid SOC
           transitions (aggressive acceleration/braking).</p>
         <figure class="doc-image">
-          <img src="results/plots/prediction_error_rf.png" alt="Prediction Error — Residuals across all test instances"
+          <img src="Random_Forest/results/plots/prediction_error_rf.png" alt="Prediction Error — Residuals across all test instances"
             loading="lazy">
           <figcaption>Prediction Error — Residuals across all test instances</figcaption>
         </figure>
@@ -1311,7 +1311,7 @@
         <p><strong>What to look for</strong>: Which sensor readings the model relies on most heavily for SOC
           predictions.</p>
         <figure class="doc-image">
-          <img src="results/plots/feature_importance_rf.png"
+          <img src="Random_Forest/results/plots/feature_importance_rf.png"
             alt="Feature Importance — Gini-based importance of 4 input features" loading="lazy">
           <figcaption>Feature Importance — Gini-based importance of 4 input features</figcaption>
         </figure>
@@ -1322,9 +1322,9 @@
         <p><strong>What to look for</strong>: 25 trees (leftmost bars) achieving the lowest Best RMSE/MAE. The reference
           benchmark is shown as a red dashed line.</p>
         <p><strong>Implementation note</strong>: Y-axes are zoomed in to magnify the small differences between
-          configurations. Without scaling, all bars would appear identical (differences <0.1%).< /p>
+          configurations. Without scaling, all bars would appear identical (differences &lt;0.1%).</p>
             <figure class="doc-image">
-              <img src="results/plots/tree_count_comparison.png"
+              <img src="Random_Forest/results/plots/tree_count_comparison.png"
                 alt="Tree Count Comparison — RMSE and MAE across 25, 50, 75, 100 trees" loading="lazy">
               <figcaption>Tree Count Comparison — RMSE and MAE across 25, 50, 75, 100 trees</figcaption>
             </figure>
@@ -1335,7 +1335,7 @@
             <p><strong>What to look for</strong>: Left panel highlights binned RMSE/MAE and sample volume (N). Right
               panel details error dispersion boxplots, confirming consistency across the active operational range.</p>
             <figure class="doc-image">
-              <img src="results/plots/error_by_soc_range.png"
+              <img src="Random_Forest/results/plots/error_by_soc_range.png"
                 alt="Error by SOC Operational Range — RMSE, MAE, and error spread across discrete battery capacity intervals"
                 loading="lazy">
               <figcaption>Error by SOC Operational Range — RMSE, MAE, and error spread across discrete battery capacity
@@ -1348,7 +1348,7 @@
             <p><strong>What to look for</strong>: Near-zero mean error (no systematic bias), tight bell-curve shape
               centered around 0, and long tails quantifying worst-case scenarios.</p>
             <figure class="doc-image">
-              <img src="results/plots/error_distribution.png"
+              <img src="Random_Forest/results/plots/error_distribution.png"
                 alt="Error Distribution — Histogram of prediction errors with mean error line" loading="lazy">
               <figcaption>Error Distribution — Histogram of prediction errors with mean error line</figcaption>
             </figure>
@@ -1360,7 +1360,7 @@
             <p><strong>What to look for</strong>: Consistent error bounds across all 10 trips without anomalous failure
               on individual driving cycles; dashed line displays the ensemble average benchmark.</p>
             <figure class="doc-image">
-              <img src="results/plots/per_trip_error.png"
+              <img src="Random_Forest/results/plots/per_trip_error.png"
                 alt="Per-Trip Performance Breakdown — Individual RMSE and MAE across 10 test trips (TripB29 to TripB38)"
                 loading="lazy">
               <figcaption>Per-Trip Performance Breakdown — Individual RMSE and MAE across 10 test trips (TripB29 to
@@ -1384,56 +1384,56 @@
                 <tbody>
                   <tr>
                     <td><strong>Best Model</strong></td>
-                    <td><code>results/models/rf_25_trees_final.joblib</code></td>
+                    <td><code>Random_Forest/results/models/rf_25_trees_final.joblib</code></td>
                     <td>~43 MB</td>
                     <td>Serialized <code>RandomForestRegressor</code> (25 trees), ready for <code>joblib.load()</code>
                     </td>
                   </tr>
                   <tr>
                     <td><strong>Results JSON</strong></td>
-                    <td><code>results/results.json</code></td>
+                    <td><code>Random_Forest/results/results.json</code></td>
                     <td>5.8 KB</td>
                     <td>All metrics for all 20 runs (4 tree counts × 5 runs), best/avg aggregations</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: SOC Estimation</strong></td>
-                    <td><code>results/plots/soc_estimation_rf.png</code></td>
+                    <td><code>Random_Forest/results/plots/soc_estimation_rf.png</code></td>
                     <td>176 KB</td>
                     <td>Actual vs. Predicted SOC curve</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: Prediction Error</strong></td>
-                    <td><code>results/plots/prediction_error_rf.png</code></td>
+                    <td><code>Random_Forest/results/plots/prediction_error_rf.png</code></td>
                     <td>130 KB</td>
                     <td>Error residuals over test instances</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: Feature Importance</strong></td>
-                    <td><code>results/plots/feature_importance_rf.png</code></td>
+                    <td><code>Random_Forest/results/plots/feature_importance_rf.png</code></td>
                     <td>61 KB</td>
                     <td>Gini importance bar chart</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: Tree Comparison</strong></td>
-                    <td><code>results/plots/tree_count_comparison.png</code></td>
+                    <td><code>Random_Forest/results/plots/tree_count_comparison.png</code></td>
                     <td>138 KB</td>
                     <td>Two-panel RMSE/MAE comparison</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: Error by SOC Range</strong></td>
-                    <td><code>results/plots/error_by_soc_range.png</code></td>
+                    <td><code>Random_Forest/results/plots/error_by_soc_range.png</code></td>
                     <td>~120 KB</td>
                     <td>Binned RMSE/MAE and error boxplots across SOC capacity intervals</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: Error Distribution</strong></td>
-                    <td><code>results/plots/error_distribution.png</code></td>
+                    <td><code>Random_Forest/results/plots/error_distribution.png</code></td>
                     <td>43 KB</td>
                     <td>Error histogram + zero/mean lines</td>
                   </tr>
                   <tr>
                     <td><strong>Plot: Per-Trip Breakdown</strong></td>
-                    <td><code>results/plots/per_trip_error.png</code></td>
+                    <td><code>Random_Forest/results/plots/per_trip_error.png</code></td>
                     <td>~130 KB</td>
                     <td>Individual RMSE and MAE across all 10 test trips (TripB29–TripB38)</td>
                   </tr>
@@ -1444,7 +1444,7 @@
             <pre><code class="language-python">import joblib
 import numpy as np
 
-model = joblib.load(&quot;results/models/rf_25_trees_final.joblib&quot;)
+model = joblib.load(&quot;Random_Forest/results/models/rf_25_trees_final.joblib&quot;)
 
 # Single prediction: [Voltage, Current, BattTemp, AmbTemp]
 sample = np.array([[340.5, -12.3, 28.1, 22.0]])
@@ -1456,25 +1456,26 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
 ├── archive/                          # Raw dataset (70 trip CSV files)
 │   ├── TripA01.csv ... TripA32.csv   #   Series A: 32 trips
 │   └── TripB01.csv ... TripB38.csv   #   Series B: 38 trips
-├── results/
-│   ├── models/
-│   │   └── rf_25_trees_final.joblib  # Serialized best model (43.2 MB)
-│   ├── plots/
-│   │   ├── soc_estimation_rf.png     # Plot 1: Actual vs Predicted SOC
-│   │   ├── prediction_error_rf.png   # Plot 2: Residuals over time
-│   │   ├── feature_importance_rf.png # Plot 3: Feature importance
-│   │   ├── tree_count_comparison.png # Plot 4: Tree count comparison
-│   │   ├── error_by_soc_range.png    # Plot 5: Error across SOC capacity intervals
-│   │   ├── error_distribution.png    # Plot 6: Error histogram
-│   │   └── per_trip_error.png        # Plot 7: Per-trip error breakdown (10 test trips)
-│   └── results.json                  # All metrics (20 runs)
-├── src/
-│   ├── config.py                     # Centralized configuration
-│   ├── data_loader.py                # Data ingestion &amp; splitting
-│   ├── evaluate.py                   # Metric computation
-│   ├── model_rf.py                   # RF training pipeline
-│   ├── plots.py                      # Visualization engine
-│   └── main.py                       # Orchestrator script
+├── Random_Forest/
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_25_trees_final.joblib  # Serialized best model (43.2 MB)
+│   │   ├── plots/
+│   │   │   ├── soc_estimation_rf.png     # Plot 1: Actual vs Predicted SOC
+│   │   │   ├── prediction_error_rf.png   # Plot 2: Residuals over time
+│   │   │   ├── feature_importance_rf.png # Plot 3: Feature importance
+│   │   │   ├── tree_count_comparison.png # Plot 4: Tree count comparison
+│   │   │   ├── error_by_soc_range.png    # Plot 5: Error across SOC capacity intervals
+│   │   │   ├── error_distribution.png    # Plot 6: Error histogram
+│   │   │   └── per_trip_error.png        # Plot 7: Per-trip error breakdown (10 test trips)
+│   │   └── results.json                  # All metrics (20 runs)
+│   └── src/
+│       ├── config.py                     # Centralized configuration
+│       ├── data_loader.py                # Data ingestion &amp; splitting
+│       ├── evaluate.py                   # Metric computation
+│       ├── model_rf.py                   # RF training pipeline
+│       ├── plots.py                      # Visualization engine
+│       └── main.py                       # Orchestrator script
 └── README.md                         # Project overview</code></pre>
             <h3 id="module-responsibilities">Module Responsibilities</h3>
             <div class="table-container">

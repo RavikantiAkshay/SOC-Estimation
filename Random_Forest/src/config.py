@@ -11,9 +11,10 @@ import os
 # ----------------------------------------------
 # Paths
 # ----------------------------------------------
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODULE_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(MODULE_ROOT)
 ARCHIVE_DIR = os.path.join(PROJECT_ROOT, "archive")
-RESULTS_DIR = os.path.join(PROJECT_ROOT, "results")
+RESULTS_DIR = os.path.join(MODULE_ROOT, "results")
 PLOTS_DIR = os.path.join(RESULTS_DIR, "plots")
 MODELS_DIR = os.path.join(RESULTS_DIR, "models")
 

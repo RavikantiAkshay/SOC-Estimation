@@ -128,42 +128,43 @@ EV_HEV/
 ├── archive/                         # Raw dataset (70 trip CSV files + metadata)
 │   ├── TripA01.csv ... TripA32.csv
 │   └── TripB01.csv ... TripB38.csv
-├── results/
-│   ├── models/
-│   │   └── rf_25_trees_final.joblib # Serialised final best model (43.2 MB)
-│   ├── plots/
-│   │   ├── soc_estimation_rf.png    # Actual vs Predicted SOC curves
-│   │   ├── prediction_error_rf.png  # Error residuals over all test instances
-│   │   ├── feature_importance_rf.png# Gini importance of the 4 input features
-│   │   ├── tree_count_comparison.png# Comparative analysis of tree configurations
-│   │   ├── error_by_soc_range.png   # Performance across SOC operational intervals
-│   │   ├── error_distribution.png   # Histogram & KDE of prediction errors
-│   │   └── per_trip_error.png       # Individual error breakdown across 10 test trips
-│   └── results.json                 # Complete numerical metrics for all runs
-├── src/
-│   ├── config.py                    # Central configuration, file paths, and hyperparameters
-│   ├── data_loader.py               # Robust CSV ingestion, header cleaning, and 60/10 split
-│   ├── evaluate.py                  # Evaluation metrics (RMSE, MAE, MAX ERROR, STD DEV)
-│   ├── model_rf.py                  # Training pipeline, multi-seed evaluation, and model extraction
-│   ├── plots.py                     # High-resolution figure generation
-│   └── main.py                      # Orchestrator script executing the full workflow
+├── Random_Forest/
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_25_trees_final.joblib # Serialised final best model (43.2 MB)
+│   │   ├── plots/
+│   │   │   ├── soc_estimation_rf.png    # Actual vs Predicted SOC curves
+│   │   │   ├── prediction_error_rf.png  # Error residuals over all test instances
+│   │   │   ├── feature_importance_rf.png# Gini importance of the 4 input features
+│   │   │   ├── tree_count_comparison.png# Comparative analysis of tree configurations
+│   │   │   ├── error_by_soc_range.png   # Performance across SOC operational intervals
+│   │   │   ├── error_distribution.png   # Histogram & KDE of prediction errors
+│   │   │   └── per_trip_error.png       # Individual error breakdown across 10 test trips
+│   │   └── results.json                 # Complete numerical metrics for all runs
+│   └── src/
+│       ├── config.py                    # Central configuration, file paths, and hyperparameters
+│       ├── data_loader.py               # Robust CSV ingestion, header cleaning, and 60/10 split
+│       ├── evaluate.py                  # Evaluation metrics (RMSE, MAE, MAX ERROR, STD DEV)
+│       ├── model_rf.py                  # Training pipeline, multi-seed evaluation, and model extraction
+│       ├── plots.py                     # High-resolution figure generation
+│       └── main.py                      # Orchestrator script executing the full workflow
 └── README.md                        # Project documentation
 ```
 
 ### Module Responsibilities
 
-- **`src/config.py`**: Declares all filesystem paths, standardized column names, feature lists, train/test trip split ratios, and default Random Forest parameters (`criterion`, `max_features`, `min_samples_leaf`, `n_jobs`).
-- **`src/data_loader.py`**: Handles parsing of semicolon-separated, Latin-1 encoded CSV files. Resolves irregular column name encodings, filters missing/NaN values, and partitions trips into 60 training and 10 testing DataFrames.
-- **`src/evaluate.py`**: Computes standard regression metrics (RMSE, MAE, Maximum Error, and Error Standard Deviation) and provides clean console formatting.
-- **`src/model_rf.py`**: Manages model instantiation via scikit-learn, executes repeated training runs with varying seeds, and extracts optimal model weights.
-- **`src/plots.py`**: Generates all evaluation figures using Matplotlib with properly scaled axes, clear labels, and publication-ready formatting.
-- **`src/main.py`**: End-to-end driver that coordinates data loading, model exploration, metric comparison, artifact persistence, and plot rendering.
+- **`Random_Forest/src/config.py`**: Declares all filesystem paths, standardized column names, feature lists, train/test trip split ratios, and default Random Forest parameters (`criterion`, `max_features`, `min_samples_leaf`, `n_jobs`).
+- **`Random_Forest/src/data_loader.py`**: Handles parsing of semicolon-separated, Latin-1 encoded CSV files. Resolves irregular column name encodings, filters missing/NaN values, and partitions trips into 60 training and 10 testing DataFrames.
+- **`Random_Forest/src/evaluate.py`**: Computes standard regression metrics (RMSE, MAE, Maximum Error, and Error Standard Deviation) and provides clean console formatting.
+- **`Random_Forest/src/model_rf.py`**: Manages model instantiation via scikit-learn, executes repeated training runs with varying seeds, and extracts optimal model weights.
+- **`Random_Forest/src/plots.py`**: Generates all evaluation figures using Matplotlib with properly scaled axes, clear labels, and publication-ready formatting.
+- **`Random_Forest/src/main.py`**: End-to-end driver that coordinates data loading, model exploration, metric comparison, artifact persistence, and plot rendering.
 
 ---
 
 ## 🖼️ Diagnostic Visualizations
 
-All generated plots are saved to [`results/plots/`](file:///e:/EV_HEV/results/plots/):
+All generated plots are saved to [`Random_Forest/results/plots/`](file:///e:/EV_HEV/Random_Forest/results/plots/):
 
 1. **SOC Estimation Curve (`soc_estimation_rf.png`)**: Tracks actual vs. predicted SOC across 118,974 test instances, demonstrating tight tracking throughout diverse driving cycles.
 2. **Prediction Error Profile (`prediction_error_rf.png`)**: Visualizes instantaneous residuals ($y_{true} - y_{pred}$) across test duration.
@@ -200,16 +201,17 @@ pip install numpy pandas scikit-learn matplotlib joblib
 
 Execute the orchestrator script from the project root:
 ```bash
-python -u src/main.py
+python -u Random_Forest/src/main.py
 ```
 
 The script will:
 1. Load and clean all 70 trip CSV files.
 2. Train and evaluate 5 independent runs for each tree size (25, 50, 75, 100 trees).
 3. Identify the optimal configuration (25 trees).
-4. Export the final model to `results/models/rf_25_trees_final.joblib`.
-5. Write all performance metrics to `results/results.json`.
-6. Render and save all 7 diagnostic charts into `results/plots/`.
+4. Export the final model to `Random_Forest/results/models/rf_25_trees_final.joblib`.
+5. Write all performance metrics to `Random_Forest/results/results.json`.
+6. Render and save all 7 diagnostic charts into `Random_Forest/results/plots/`.
+
 
 ---
 

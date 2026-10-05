@@ -34,6 +34,10 @@ data/
 *.h5
 results/models/*.joblib
 !results/models/.gitkeep
+Random_Forest/results/models/*.joblib
+!Random_Forest/results/models/.gitkeep
+Decision_Tree/results/models/*.joblib
+!Decision_Tree/results/models/.gitkeep
 
 # Testing and coverage
 .pytest_cache/
