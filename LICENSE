@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2024-2026 Akshay Ravikanti
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+THIRD-PARTY ATTRIBUTIONS & LICENSES
+================================================================================
+
+1. Research Methodology Attribution:
+   - Publication: "State of charge estimation for electric vehicles using random forest"
+   - Authors: Mohd Herwan Sulaiman, Zuriani Mustaffa (Universiti Malaysia Pahang Al-Sultan Abdullah - UMPSA)
+   - Journal: Green Energy and Intelligent Transportation, Vol. 3, Issue 3, 2024, 100177
+   - DOI: https://doi.org/10.1016/j.geits.2024.100177
+   - License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+     https://creativecommons.org/licenses/by/4.0/
+   - Notice: This repository is an independent open-source software implementation based on the methodology described in the above publication.
+
+2. Electric Vehicle Driving Telemetry Dataset Attribution:
+   - Dataset: "Battery and heating data in real driving cycles" (BMW i3 60 Ah Driving Telemetry)
+   - Authors: M. S. J. B. D. Trifonov et al.
+   - Identifier / DOI: https://doi.org/10.21227/6jr9-5235
+   - License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+     https://creativecommons.org/licenses/by/4.0/
+   - Notice: Telemetry collected from 70 real-world driving trips in Munich, Germany via OBD-II logging. In compliance with repository size constraints and standard open data redistribution practices, the raw dataset CSVs are excluded from version control and can be loaded directly into the archive/ folder as detailed in README.md.

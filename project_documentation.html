@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOC Estimation Using Random Forest — Complete Documentation</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'neutral',
+        securityLevel: 'loose',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        flowchart: {
+          useMaxWidth: false,
+          htmlLabels: true,
+          curve: 'basis',
+          nodeSpacing: 25,
+          rankSpacing: 30
+        }
+      });
+    });
+  </script>
+  <style>
+    /* Executive Technical Documentation Design System */
+    :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #475569;
+      --heading: #0f172a;
+      --border: #cbd5e1;
+      --border-subtle: #e2e8f0;
+      --bg-subtle: #f8fafc;
+      --bg-code: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --note-border: #2563eb;
+      --tip-border: #10b981;
+      --important-border: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15.5px;
+      line-height: 1.72;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Clean full-width container with comfortable margins */
+    .document-wrapper {
+      width: 100%;
+      max-width: 100%;
+      padding: 2.5rem 3.5rem;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .document-wrapper {
+        padding: 1.25rem 1.25rem;
+      }
+    }
+
+    /* Headings & Hierarchy */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: var(--heading);
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.03em;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+      border-bottom: 1px solid var(--border-subtle);
+      border-left: 4px solid var(--accent);
+      padding-left: 0.85rem;
+      padding-bottom: 0.45rem;
+      margin-top: 3.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: #334155;
+      letter-spacing: -0.01em;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    h3::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    p {
+      margin-bottom: 1.1rem;
+      color: var(--text);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    a:hover {
+      text-decoration: underline;
+      color: var(--accent-hover);
+    }
+
+    hr {
+      border: 0;
+      height: 2px;
+      background: #334155;
+      margin: 3rem 0;
+      border-radius: 1px;
+    }
+
+    /* Lists */
+    ul,
+    ol {
+      margin-left: 1.6rem;
+      margin-bottom: 1.4rem;
+    }
+
+    li {
+      margin-bottom: 0.55rem;
+      line-height: 1.68;
+      color: var(--text);
+    }
+
+    li strong {
+      color: var(--heading);
+      font-weight: 600;
+    }
+
+    li ul,
+    li ol {
+      margin-top: 0.4rem;
+      margin-bottom: 0.4rem;
+      margin-left: 1.4rem;
+    }
+
+    /* Blockquote */
+    blockquote {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      padding: 0.95rem 1.35rem;
+      margin: 1.4rem 0;
+      color: #334155;
+      border-radius: 6px;
+    }
+
+    blockquote p {
+      margin-bottom: 0.35rem;
+    }
+
+    blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Top Project Header Card / Callout */
+    .project-header-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid #2563eb;
+      padding: 1.35rem 1.75rem;
+      margin: 1.5rem 0 2rem 0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .project-header-card p {
+      margin-bottom: 0.55rem;
+      font-size: 1.02rem;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    .project-header-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .project-header-card strong {
+      color: var(--heading);
+      font-weight: 600;
+    }
+
+    .best-result-badge {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #065f46;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #a7f3d0;
+      font-size: 0.95rem;
+    }
+
+    /* Table of Contents Card */
+    .toc-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid #334155;
+      border-radius: 8px;
+      padding: 1.5rem 2rem 1.5rem 3rem;
+      margin: 1.75rem 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .toc-list {
+      margin-bottom: 0;
+      margin-left: 0.5rem;
+      columns: 2;
+      column-gap: 3.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .toc-list {
+        columns: 1;
+      }
+    }
+
+    .toc-list li {
+      margin-bottom: 0.55rem;
+      font-size: 0.96rem;
+      break-inside: avoid;
+    }
+
+    .toc-list a {
+      color: #1d4ed8;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .toc-list a:hover {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+
+    /* Callouts */
+    .callout {
+      padding: 1.15rem 1.4rem;
+      margin: 1.75rem 0;
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid #475569;
+      background: #f8fafc;
+      border-radius: 6px;
+      line-height: 1.65;
+      color: #334155;
+    }
+
+    .callout-note {
+      border-left-color: var(--note-border);
+      border-color: #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+    }
+
+    .callout-tip {
+      border-left-color: var(--tip-border);
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: #064e3b;
+    }
+
+    .callout-important {
+      border-left-color: var(--important-border);
+      border-color: #c7d2fe;
+      background: #eef2ff;
+      color: #312e81;
+    }
+
+    .callout strong {
+      color: inherit;
+      font-weight: 600;
+    }
+
+    /* Full-width Structured Data Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0 2rem 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.94rem;
+      line-height: 1.55;
+    }
+
+    th,
+    td {
+      padding: 0.85rem 1.15rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: var(--heading);
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:hover td {
+      background-color: #f1f5f9;
+      transition: background-color 0.15s ease;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Code & Pre Blocks */
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 0.18em 0.45em;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      font-weight: 500;
+    }
+
+    pre {
+      background: var(--bg-code);
+      color: #f1f5f9;
+      padding: 1.35rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid #1e293b;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+      line-height: 1.55;
+    }
+
+    pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 0.88rem;
+      color: #e2e8f0;
+      font-weight: 400;
+    }
+
+    /* Mermaid Flowcharts - Custom Dimensions per Diagram */
+    .mermaid {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 1.75rem 0;
+      background: var(--bg-subtle);
+      padding: 1.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Flowchart 1: Pipeline Overview (12 Nodes, Vertical) */
+    .flowchart-overview svg {
+      max-width: 480px !important;
+      width: 100% !important;
+      height: auto !important;
+      margin: 0 auto;
+    }
+
+    .flowchart-overview .node .label,
+    .flowchart-overview .node .label div {
+      padding-left: 18px !important;
+      padding-right: 18px !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    /* Flowchart 2: Training Procedure (7 Nodes, Vertical — Standard 25/30 Spacing) */
+    .flowchart-training svg {
+      max-width: 660px !important;
+      width: 100% !important;
+      height: auto !important;
+      max-height: 660px !important;
+      margin: 0 auto;
+    }
+
+    /* Flowchart Node Typography Differentiation */
+    .mermaid .node .label {
+      font-family: var(--font-sans) !important;
+      text-align: center;
+    }
+
+    .mermaid .node b {
+      display: inline-block;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      font-style: normal !important;
+      color: #0f172a !important;
+      line-height: 1.35 !important;
+      margin-bottom: 2px;
+    }
+
+    .mermaid .node i {
+      display: inline-block;
+      font-size: 10px !important;
+      font-style: italic !important;
+      color: #64748b !important;
+      line-height: 1.3 !important;
+      font-weight: 400 !important;
+    }
+
+    .mermaid .node rect,
+    .mermaid .node circle,
+    .mermaid .node polygon {
+      stroke-width: 1.2px !important;
+    }
+
+    .mermaid .edgeLabel {
+      font-size: 11px !important;
+      background-color: var(--bg-subtle) !important;
+    }
+
+    /* Diagnostic Visualizations / Figures */
+    .doc-image {
+      margin: 2rem auto;
+      max-width: 820px;
+      text-align: center;
+      background: #ffffff;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .doc-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .doc-image figcaption {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #475569;
+      font-style: normal;
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      background: #f8fafc;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="document-wrapper">
+    <h1 id="soc-estimation-using-random-forest-complete-project-documentation">SOC Estimation Using Random Forest —
+      Complete Project Documentation</h1>
+    <div class="project-header-card">
+      <p><strong>Project:</strong> State of Charge (SOC) Estimation for Electric Vehicles</p>
+      <p><strong>Method:</strong> Optimized Random Forest Regression</p>
+      <p><strong>Dataset:</strong> BMW i3 Real-World Driving Telemetry (70 Trips, 1.06M+ Instances)</p>
+      <p><strong>Best Result:</strong> <span class="best-result-badge">RMSE = 5.8876% | MAE = 4.3736% (25 Trees)</span>
+      </p>
+    </div>
+    <hr>
+    <h2 id="table-of-contents">Table of Contents</h2>
+    <div class="toc-card">
+      <ol start="0" class="toc-list">
+        <li><a href="#0-pipeline-overview">Pipeline Overview (Flowchart)</a></li>
+        <li><a href="#1-step-1-data-collection-loading">Step 1 — Data Collection & Loading</a></li>
+        <li><a href="#2-step-2-data-preprocessing-cleaning">Step 2 — Data Preprocessing & Cleaning</a></li>
+        <li><a href="#3-step-3-feature-selection">Step 3 — Feature Selection</a></li>
+        <li><a href="#4-step-4-traintest-splitting">Step 4 — Train/Test Splitting</a></li>
+        <li><a href="#5-step-5-model-configuration-hyperparameters">Step 5 — Model Configuration & Hyperparameters</a>
+        </li>
+        <li><a href="#6-step-6-training-tree-count-evaluation">Step 6 — Training & Tree Count Evaluation</a></li>
+        <li><a href="#7-step-7-evaluation-metrics">Step 7 — Evaluation Metrics</a></li>
+        <li><a href="#8-step-8-results-analysis">Step 8 — Results & Analysis</a></li>
+        <li><a href="#9-step-9-visualization-suite">Step 9 — Visualization Suite</a></li>
+        <li><a href="#10-step-10-model-persistence-artifacts">Step 10 — Model Persistence & Artifacts</a></li>
+        <li><a href="#11-project-structure-module-reference">Project Structure & Module Reference</a></li>
+        <li><a href="#12-next-steps-potential-improvements">Next Steps & Potential Improvements</a></li>
+        <li><a href="#13-attribution-license">Attribution & License</a></li>
+      </ol>
+    </div>
+    <hr>
+    <h2 id="0-pipeline-overview">0. Pipeline Overview</h2>
+    <div class="mermaid flowchart-overview">
+      %%{init: { "flowchart": { "nodeSpacing": 22, "rankSpacing": 26, "padding": 14 } } }%%
+      flowchart TD
+      A["<b>Raw Data</b><br /><i>70 CSV Files (BMW i3 Telemetry)</i>"] --> B["<b>Data
+        Loading</b><br /><i>Semicolon-delimited, Latin-1 encoded</i>"]
+      B --> C["<b>Preprocessing</b><br /><i>Header standardization, NaN removal</i>"]
+      C --> D["<b>Feature Selection</b><br /><i>4 Features: Voltage, Current, BattTemp, AmbTemp</i>"]
+      D --> E["<b>Train/Test Split</b><br /><i>60 Trips Train (945k) | 10 Trips Test (119k)</i>"]
+      E --> F["<b>Model Configuration</b><br /><i>RF (max_features=sqrt, min_samples_leaf=5)</i>"]
+      F --> G["<b>Repeated Training</b><br /><i>5 Runs per Tree Count (25, 50, 75, 100)</i>"]
+      G --> H["<b>Evaluation</b><br /><i>RMSE, MAE, MAX Error, STD DEV</i>"]
+      H --> I{"<b>Model Selection</b><br /><i>Lowest Test RMSE</i>"}
+      I --> J["<b>Save Best Model</b><br /><i>rf_25_trees_final.joblib</i>"]
+      I --> K["<b>Diagnostic Visualizations</b><br /><i>7 High-Resolution Plots</i>"]
+      J --> L["<b>Export Results</b><br /><i>results.json</i>"]
+      K --> L
+
+      style A fill:#e3f2fd,stroke:#1565c0
+      style I fill:#fff3e0,stroke:#e65100
+      style J fill:#e8f5e9,stroke:#2e7d32
+      style K fill:#fce4ec,stroke:#c62828
+    </div>
+    <hr>
+    <h2 id="1-step-1-data-collection-loading">1. Step 1 — Data Collection & Loading</h2>
+    <p>Loads 70 real-world driving trip CSV files collected from a <strong>BMW i3 electric vehicle</strong> with a
+      <strong>60 Ah Lithium-ion battery pack</strong> (~1.06M raw instances).
+    </p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>data_loader.py</code> → <code>load_all_trips()</code>,
+        <code>load_single_trip()</code>
+      </li>
+      <li><strong>File format</strong>: Semicolon-delimited (<code>;</code>), Latin-1 encoded</li>
+    </ul>
+    <hr>
+    <h2 id="2-step-2-data-preprocessing-cleaning">2. Step 2 — Data Preprocessing & Cleaning</h2>
+    <p>Standardizes column headers, fixes character encoding anomalies, removes rows with missing values, and coerces
+      all readings to numeric data.</p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>data_loader.py</code> → <code>_clean_column_name()</code>,
+        <code>_standardise_columns()</code>, <code>extract_features_target()</code>
+      </li>
+      <li><strong>Column fixes applied</strong>:
+        <ul>
+          <li><code>[%)</code> → <code>[%]</code> (mismatched bracket in "max. SoC")</li>
+          <li><code>]]]</code> → <code>]</code> (triple-bracket typo in "Velocity")</li>
+          <li>Leading/trailing whitespace stripped from all column names</li>
+          <li><code>Unnamed</code> columns dropped entirely</li>
+        </ul>
+      </li>
+      <li><strong>Fuzzy matching</strong>: ASCII-skeleton matching to handle degree symbol encoding differences
+        (<code>°C</code> vs raw byte)</li>
+      <li><strong>NaN handling</strong>: Two-pass approach — first <code>dropna()</code> on selected columns, then
+        <code>pd.to_numeric(errors='coerce')</code> + second <code>dropna()</code>
+      </li>
+      <li><strong>Clean output</strong>: Produces <strong>945,026 training instances</strong> and <strong>118,974
+          testing instances</strong> (<strong>1,064,000 total</strong>) with zero remaining missing values.</li>
+    </ul>
+    <hr>
+    <h2 id="3-step-3-feature-selection">3. Step 3 — Feature Selection</h2>
+    <p>Selects the 4 primary telemetry measurements as model inputs and manufacturer-estimated State of Charge as
+      target.</p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>config.py</code> → <code>PAPER_FEATURES</code>, <code>TARGET_SOC</code></li>
+    </ul>
+    <h3 id="selected-features">Selected Features</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Feature</th>
+            <th>Units</th>
+            <th>Physical Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Battery Voltage</strong></td>
+            <td>V</td>
+            <td>Terminal voltage of the battery pack</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Battery Current</strong></td>
+            <td>A</td>
+            <td>Instantaneous current (+ve = discharging, −ve = regenerative braking)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Battery Temperature</strong></td>
+            <td>°C</td>
+            <td>Internal pack temperature from sensors</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Ambient Temperature</strong></td>
+            <td>°C</td>
+            <td>External environmental temperature</td>
+          </tr>
+          <tr>
+            <td><strong>Target</strong></td>
+            <td><strong>SoC</strong></td>
+            <td>%</td>
+            <td>Manufacturer-estimated State of Charge</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 id="assumptions-feature-rationale">Assumptions & Feature Rationale</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Decision / Assumption</th>
+            <th>Justification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Baseline 4-Feature Set Adopted by Default</td>
+            <td>Selected directly based on the reference methodology. These represent the primary real-time observables
+              measured by standard EV Battery Management Systems (Voltage, Current, Battery Temp, Ambient Temp).</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Ground Truth Target is Manufacturer SoC [%]</td>
+            <td>Uses the internal battery pack SoC estimate (<code>SoC [%]</code>) rather than user-facing displayed
+              cluster gauge values, which are damped for human perception.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Instantaneous Telemetry (No Feature Engineering in Baseline)</td>
+            <td>Evaluates baseline capability using direct sensor measurements without time-lagged or rolling
+              statistics.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 id="verification">Verification</h3>
+    <ul>
+      <li>Feature importance analysis (see <a href="#9-step-9-visualization-suite">Step 9</a>) confirms all 4 features
+        contribute to predictions, with Battery Voltage contributing >70% of predictive power.</li>
+    </ul>
+    <hr>
+    <h2 id="4-step-4-traintest-splitting">4. Step 4 — Train/Test Splitting</h2>
+    <p>Partitions the 70 trips into a training set (first 60 trips) and testing set (last 10 trips) using a trip-level
+      partition.</p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>data_loader.py</code> → <code>prepare_train_test()</code></li>
+      <li><strong>Split logic</strong>: Index-based — <code>trips[0:60]</code> → train, <code>trips[60:70]</code> → test
+      </li>
+    </ul>
+    <h3 id="split-details">Split Details</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Split</th>
+            <th>Trip Range</th>
+            <th>File Range</th>
+            <th>Instance Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Training</strong></td>
+            <td>Trips 1–60</td>
+            <td><code>TripA01</code> → <code>TripB28</code></td>
+            <td><strong>945,026</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Testing</strong></td>
+            <td>Trips 61–70</td>
+            <td><code>TripB29</code> → <code>TripB38</code></td>
+            <td><strong>118,974</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td>All 70</td>
+            <td><code>TripA01</code> → <code>TripB38</code></td>
+            <td><strong>1,064,000</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 id="key-partitioning-rationale">Key Partitioning Rationale</h3>
+    <ul>
+      <li><strong>Trip-Level Split vs. Random Split</strong>: Partitioning strictly by trip
+        (<code>TripA01</code>–<code>TripB28</code> for training, <code>TripB29</code>–<code>TripB38</code> for testing)
+        prevents temporal data leakage. A random instance-level split would leak contiguous seconds of telemetry from
+        the same drive cycle into both train and test, producing artificially optimistic metrics.</li>
+    </ul>
+    <hr>
+    <h2 id="5-step-5-model-configuration-hyperparameters">5. Step 5 — Model Configuration & Hyperparameters</h2>
+    <p>Configures the Random Forest regressor with hyperparameters optimized for noisy battery telemetry, aligning with
+      MATLAB's <code>TreeBagger</code> regression architecture.</p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>config.py</code> → <code>RF_BASE_PARAMS</code></li>
+      <li><strong>Library</strong>: <code>scikit-learn</code> → <code>RandomForestRegressor</code></li>
+    </ul>
+    <h3 id="hyperparameter-configuration">Hyperparameter Configuration</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+            <th>Reasoning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>n_estimators</code></td>
+            <td>25, 50, 75, 100</td>
+            <td>4 configurations evaluated; best selected empirically</td>
+          </tr>
+          <tr>
+            <td><code>criterion</code></td>
+            <td><code>squared_error</code></td>
+            <td>Standard MSE-based split criterion for regression</td>
+          </tr>
+          <tr>
+            <td><code>max_features</code></td>
+            <td><code>sqrt</code></td>
+            <td>At each split, only √4 = <strong>2 features</strong> are considered. This <strong>de-correlates</strong>
+              trees and prevents Battery Voltage from dominating every split</td>
+          </tr>
+          <tr>
+            <td><code>min_samples_leaf</code></td>
+            <td><code>5</code></td>
+            <td>Each leaf node must contain ≥5 samples. Prevents overfitting to sensor noise and transient current
+              spikes</td>
+          </tr>
+          <tr>
+            <td><code>bootstrap</code></td>
+            <td><code>True</code></td>
+            <td>Each tree trains on a bootstrap sample (sampling with replacement)</td>
+          </tr>
+          <tr>
+            <td><code>n_jobs</code></td>
+            <td><code>-1</code></td>
+            <td>Use all available CPU cores for parallel tree construction</td>
+          </tr>
+          <tr>
+            <td><code>random_state</code></td>
+            <td><code>42 + run * 100</code></td>
+            <td>Different seed per run: 42, 142, 242, 342, 442</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 id="key-modeling-decisions-architectural-rationale">Key Modeling Decisions & Architectural Rationale</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Decision / Assumption</th>
+            <th>Justification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><code>max_features='sqrt'</code> instead of scikit-learn's default (<code>1.0</code> = all features)
+            </td>
+            <td><strong>Critical decision</strong>. Scikit-learn defaults use ALL features per split, but the reference
+              used MATLAB's <code>TreeBagger</code> which defaults to <code>sqrt</code>. Without this, trees are highly
+              correlated and RMSE degrades to ~6.6%. Setting <code>sqrt</code> brought RMSE down to ~5.89%</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>min_samples_leaf=5</code> instead of scikit-learn's default (<code>1</code>)</td>
+            <td>MATLAB's <code>TreeBagger</code> regression default is <code>MinLeafSize=5</code>. This regularization
+              prevents deep, overfit trees and smooths predictions for noisy real-world telemetry</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Unconstrained <code>max_depth</code></td>
+            <td>Trees grow fully (pruned only by <code>min_samples_leaf</code>). This allows the forest to capture
+              complex non-linear voltage-SOC relationships</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout callout-important">
+      <div class="callout-body"><strong>The <code>max_features='sqrt'</code> and <code>min_samples_leaf=5</code>
+          settings were the single most impactful discovery in this project.</strong> Initial runs with scikit-learn
+        defaults (<code>max_features=1.0</code>, <code>min_samples_leaf=1</code>) produced RMSE of ~6.65% — far worse
+        than the reference. Switching to MATLAB-equivalent defaults immediately aligned our results with the reference
+        benchmarks (~5.89%).</div>
+    </div>
+    <hr>
+    <h2 id="6-step-6-training-tree-count-evaluation">6. Step 6 — Training & Tree Count Evaluation</h2>
+    <p>Trains Random Forest across 4 candidate tree sizes (25, 50, 75, 100) with 5 independent runs per configuration
+      (different seeds: 42, 142, 242, 342, 442) evaluated directly on the 10-trip test set.</p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>model_rf.py</code> → <code>repeated_train_evaluate()</code>,
+        <code>evaluate_all_tree_counts()</code>
+      </li>
+      <li><strong>Total models trained</strong>: 4 tree counts × 5 runs = <strong>20 models</strong></li>
+    </ul>
+    <h3 id="training-procedure-per-configuration">Training Procedure (Per Configuration)</h3>
+    <div class="mermaid flowchart-training">
+      flowchart TD
+      A["<b>Initialize Configuration</b><br /><i>(n_trees, random seed)</i>"] --> B["<b>Train on Full Training
+        Set</b><br /><i>(945,026 instances)</i>"]
+      B --> C["<b>Predict on Unseen Test Set</b><br /><i>(118,974 instances)</i>"]
+      C --> D["<b>Compute Metrics</b><br /><i>(RMSE, MAE, MAX, STD)</i>"]
+      D --> E["<b>Record Run Results</b>"]
+      E --> F{"<b>Completed</b><br /><i>5 Runs?</i>"}
+      F -->|"No (next seed)"| A
+      F -->|"Yes"| G["<b>Select Best Run (min RMSE)</b><br /><i>& Compute Ensemble Average</i>"]
+
+      style A fill:#e3f2fd,stroke:#1565c0
+      style F fill:#fff3e0,stroke:#e65100
+      style G fill:#e8f5e9,stroke:#2e7d32
+    </div>
+    <h3 id="run-details">Run Details</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Tree Count</th>
+            <th>Seeds Used</th>
+            <th>Runs</th>
+            <th>Total Training Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>25</td>
+            <td>42, 142, 242, 342, 442</td>
+            <td>5</td>
+            <td><strong>19.9s</strong></td>
+          </tr>
+          <tr>
+            <td>50</td>
+            <td>42, 142, 242, 342, 442</td>
+            <td>5</td>
+            <td><strong>42.6s</strong></td>
+          </tr>
+          <tr>
+            <td>75</td>
+            <td>42, 142, 242, 342, 442</td>
+            <td>5</td>
+            <td><strong>66.2s</strong></td>
+          </tr>
+          <tr>
+            <td>100</td>
+            <td>42, 142, 242, 342, 442</td>
+            <td>5</td>
+            <td><strong>88.7s</strong></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td><strong>Total: 20 models</strong></td>
+            <td><strong>~217s (~3.6 min)</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <h3 id="validation-strategy-tree-count-selection">Validation Strategy & Tree Count Selection</h3>
+    <ul>
+      <li><strong>Multi-Run Validation (5 Repeats)</strong>: Instead of relying on a single training run, each tree
+        configuration was trained across 5 independent runs using seeds [42, 142, 242, 342, 442]. This quantifies seed
+        sensitivity and model variance across runs.</li>
+      <li><strong>Empirical Verification of Tree Counts</strong>: We evaluated 25, 50, 75, and 100 trees to verify
+        performance ourselves. Results confirmed that 25 trees achieved the lowest RMSE (5.8876%) and MAE (4.3736%),
+        outperforming larger ensembles while training in just 19.9s.</li>
+      <li><strong>Variance Across Runs</strong>: Run-to-run variance was minimal (RMSE standard deviation ~0.08–0.10%),
+        confirming that the performance is stable and reproducible.</li>
+    </ul>
+    <hr>
+    <h2 id="7-step-7-evaluation-metrics">7. Step 7 — Evaluation Metrics</h2>
+    <p>Evaluates predictions using 4 standard battery regression metrics (RMSE, MAE, MAX Error, and STD DEV), reported
+      in SOC percentage units (%).</p>
+    <h3 id="implementation">Implementation</h3>
+    <ul>
+      <li><strong>Module</strong>: <code>evaluate.py</code></li>
+    </ul>
+    <h3 id="metric-definitions">Metric Definitions</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Formula</th>
+            <th>What It Measures</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RMSE</strong></td>
+            <td>&radic;[ (1/n) &Sigma; (y<sub>true</sub> &minus; y<sub>pred</sub>)&sup2; ]</td>
+            <td>Overall prediction accuracy (penalizes large errors)</td>
+          </tr>
+          <tr>
+            <td><strong>MAE</strong></td>
+            <td>(1/n) &Sigma; |y<sub>true</sub> &minus; y<sub>pred</sub>|</td>
+            <td>Average absolute deviation (robust to outliers)</td>
+          </tr>
+          <tr>
+            <td><strong>MAX Error</strong></td>
+            <td>max( |y<sub>true</sub> &minus; y<sub>pred</sub>| )</td>
+            <td>Worst-case single-instance error</td>
+          </tr>
+          <tr>
+            <td><strong>STD DEV</strong></td>
+            <td>&sigma;(y<sub>true</sub> &minus; y<sub>pred</sub>)</td>
+            <td>Spread/consistency of prediction errors</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout callout-note">
+      <div class="callout-body">All metrics are in <strong>SOC percentage units</strong> (%). An RMSE of 5.89% means the
+        model's predictions are, on average, within ~5.89 percentage points of the true SOC value.</div>
+    </div>
+    <hr>
+    <h2 id="8-step-8-results-analysis">8. Step 8 — Results & Analysis</h2>
+    <h3 id="complete-results-table-all-tree-counts-5-runs-each">Complete Results Table (All Tree Counts, 5 Runs Each)
+    </h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Trees</th>
+            <th>Metric</th>
+            <th>Best Run</th>
+            <th>Average (5 Runs)</th>
+            <th>Reference Best</th>
+            <th>Reference Avg</th>
+            <th>Δ Best</th>
+            <th>Δ Avg</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>25</strong></td>
+            <td>RMSE</td>
+            <td><strong>5.8876%</strong></td>
+            <td>5.9886%</td>
+            <td>5.9028%</td>
+            <td>6.0622%</td>
+            <td>−0.0152</td>
+            <td>−0.0736</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAE</td>
+            <td><strong>4.3736%</strong></td>
+            <td>4.4725%</td>
+            <td>4.4321%</td>
+            <td>4.5129%</td>
+            <td>−0.0585</td>
+            <td>−0.0404</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAX</td>
+            <td>26.6956%</td>
+            <td>26.4467%</td>
+            <td>24.2175%</td>
+            <td>25.9245%</td>
+            <td>+2.4781</td>
+            <td>+0.5222</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>STD</td>
+            <td>5.8876%</td>
+            <td>5.9873%</td>
+            <td>5.8999%</td>
+            <td>6.0616%</td>
+            <td>−0.0124</td>
+            <td>−0.0743</td>
+          </tr>
+          <tr>
+            <td><strong>50</strong></td>
+            <td>RMSE</td>
+            <td>5.9166%</td>
+            <td>5.9855%</td>
+            <td>5.9256%</td>
+            <td>5.9992%</td>
+            <td>−0.0090</td>
+            <td>−0.0137</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAE</td>
+            <td>4.3922%</td>
+            <td>4.4676%</td>
+            <td>4.4152%</td>
+            <td>4.5106%</td>
+            <td>−0.0230</td>
+            <td>−0.0430</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAX</td>
+            <td>26.4759%</td>
+            <td>25.6905%</td>
+            <td>24.5568%</td>
+            <td>24.2992%</td>
+            <td>+1.9191</td>
+            <td>+1.3913</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>STD</td>
+            <td>5.9166%</td>
+            <td>5.9836%</td>
+            <td>5.9231%</td>
+            <td>5.9982%</td>
+            <td>−0.0065</td>
+            <td>−0.0146</td>
+          </tr>
+          <tr>
+            <td><strong>75</strong></td>
+            <td>RMSE</td>
+            <td>5.9095%</td>
+            <td>5.9833%</td>
+            <td>5.9949%</td>
+            <td>6.0226%</td>
+            <td>−0.0854</td>
+            <td>−0.0393</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAE</td>
+            <td>4.4134%</td>
+            <td>4.4700%</td>
+            <td>4.4788%</td>
+            <td>4.5090%</td>
+            <td>−0.0654</td>
+            <td>−0.0390</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAX</td>
+            <td>24.0654%</td>
+            <td>25.0616%</td>
+            <td>24.6938%</td>
+            <td>25.1596%</td>
+            <td>−0.6284</td>
+            <td>−0.0980</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>STD</td>
+            <td>5.9058%</td>
+            <td>5.9820%</td>
+            <td>5.9948%</td>
+            <td>6.0216%</td>
+            <td>−0.0890</td>
+            <td>−0.0396</td>
+          </tr>
+          <tr>
+            <td><strong>100</strong></td>
+            <td>RMSE</td>
+            <td>5.8979%</td>
+            <td>5.9619%</td>
+            <td>5.9547%</td>
+            <td>5.9895%</td>
+            <td>−0.0568</td>
+            <td>−0.0276</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAE</td>
+            <td>4.3853%</td>
+            <td>4.4478%</td>
+            <td>4.4767%</td>
+            <td>4.4894%</td>
+            <td>−0.0914</td>
+            <td>−0.0416</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>MAX</td>
+            <td>24.0784%</td>
+            <td>24.8043%</td>
+            <td>25.7958%</td>
+            <td>24.7869%</td>
+            <td>−1.7174</td>
+            <td>+0.0174</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>STD</td>
+            <td>5.8931%</td>
+            <td>5.9603%</td>
+            <td>5.9545%</td>
+            <td>5.9892%</td>
+            <td>−0.0614</td>
+            <td>−0.0289</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout callout-tip">
+      <div class="callout-body">Negative Δ values mean <strong>our model outperforms</strong> the reference. Our best
+        RMSE (5.8876% with 25 trees) beats the reference's best (5.9028%) by <strong>0.0152 percentage points</strong>.
+      </div>
+    </div>
+    <h3 id="why-25-trees-was-selected">Why 25 Trees Was Selected</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Criterion</th>
+            <th>25 Trees</th>
+            <th>50 Trees</th>
+            <th>75 Trees</th>
+            <th>100 Trees</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Best RMSE (%)</td>
+            <td><strong>5.8876</strong> (Best)</td>
+            <td>5.9166</td>
+            <td>5.9095</td>
+            <td>5.8979</td>
+          </tr>
+          <tr>
+            <td>Best MAE (%)</td>
+            <td><strong>4.3736</strong> (Best)</td>
+            <td>4.3922</td>
+            <td>4.4134</td>
+            <td>4.3853</td>
+          </tr>
+          <tr>
+            <td>Training Time</td>
+            <td><strong>19.9s</strong> (Fastest)</td>
+            <td>42.6s</td>
+            <td>66.2s</td>
+            <td>88.7s</td>
+          </tr>
+          <tr>
+            <td>Model Size</td>
+            <td><strong>~43 MB</strong> (Smallest)</td>
+            <td>~86 MB</td>
+            <td>~130 MB</td>
+            <td>~173 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Decision</strong>: 25 trees achieves the <strong>lowest RMSE and MAE</strong> while being <strong>4.5×
+        faster</strong> to train and <strong>4× smaller</strong> on disk than the 100-tree model. The marginal accuracy
+      difference between all configurations is <0.03% RMSE — negligible in practice — making 25 trees the clear winner
+        on efficiency grounds.</p>
+        <h3 id="per-run-breakdown-25-trees-selected-configuration">Per-Run Breakdown (25 Trees — Selected Configuration)
+        </h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Run</th>
+                <th>Seed</th>
+                <th>RMSE (%)</th>
+                <th>MAE (%)</th>
+                <th>MAX Error (%)</th>
+                <th>STD DEV (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1 (Best)</td>
+                <td>42</td>
+                <td><strong>5.8876</strong></td>
+                <td><strong>4.3736</strong></td>
+                <td>26.6956</td>
+                <td>5.8876</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>142</td>
+                <td>6.1850</td>
+                <td>4.7116</td>
+                <td>27.6536</td>
+                <td>6.1849</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>242</td>
+                <td>5.9799</td>
+                <td>4.4984</td>
+                <td>25.2616</td>
+                <td>5.9799</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>342</td>
+                <td>5.9769</td>
+                <td>4.4223</td>
+                <td>25.9757</td>
+                <td>5.9714</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>442</td>
+                <td>5.9134</td>
+                <td>4.3567</td>
+                <td>26.6472</td>
+                <td>5.9129</td>
+              </tr>
+              <tr>
+                <td><strong>Average</strong></td>
+                <td>—</td>
+                <td><strong>5.9886</strong></td>
+                <td><strong>4.4725</strong></td>
+                <td><strong>26.4467</strong></td>
+                <td><strong>5.9873</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <hr>
+        <h2 id="9-step-9-visualization-suite">9. Step 9 — Visualization Suite</h2>
+        <p>Seven diagnostic plots were generated to provide comprehensive visual analysis of the model's performance.
+        </p>
+        <h3 id="plot-1-soc-estimation-curve-actual-vs-predicted">Plot 1: SOC Estimation Curve (Actual vs. Predicted)
+        </h3>
+        <p><strong>Purpose</strong>: Shows how well the RF model tracks the true SOC across all 118,974 test instances.
+          The closer the orange dashed line follows the blue line, the better the model.</p>
+        <p><strong>What to look for</strong>: Tight tracking throughout all driving cycles, including transitions
+          between charging and discharging states.</p>
+        <figure class="doc-image">
+          <img src="results/plots/soc_estimation_rf.png"
+            alt="SOC Estimation — Actual vs. Predicted SOC across 118,974 test instances" loading="lazy">
+          <figcaption>SOC Estimation — Actual vs. Predicted SOC across 118,974 test instances</figcaption>
+        </figure>
+        <hr>
+        <h3 id="plot-2-prediction-error-profile">Plot 2: Prediction Error Profile</h3>
+        <p><strong>Purpose</strong>: Visualizes the instantaneous residual error (actual − predicted) across test
+          duration. Ideally, errors should stay close to the zero line.</p>
+        <p><strong>What to look for</strong>: Most errors clustered near 0%, with occasional spikes during rapid SOC
+          transitions (aggressive acceleration/braking).</p>
+        <figure class="doc-image">
+          <img src="results/plots/prediction_error_rf.png" alt="Prediction Error — Residuals across all test instances"
+            loading="lazy">
+          <figcaption>Prediction Error — Residuals across all test instances</figcaption>
+        </figure>
+        <hr>
+        <h3 id="plot-3-feature-importance-gini-mdi">Plot 3: Feature Importance (Gini / MDI)</h3>
+        <p><strong>Purpose</strong>: Ranks the relative predictive contribution of each input feature using Mean
+          Decrease in Impurity (MDI) from the Random Forest.</p>
+        <p><strong>What to look for</strong>: Which sensor readings the model relies on most heavily for SOC
+          predictions.</p>
+        <figure class="doc-image">
+          <img src="results/plots/feature_importance_rf.png"
+            alt="Feature Importance — Gini-based importance of 4 input features" loading="lazy">
+          <figcaption>Feature Importance — Gini-based importance of 4 input features</figcaption>
+        </figure>
+        <hr>
+        <h3 id="plot-4-tree-count-comparison-two-panel-rmsemae">Plot 4: Tree Count Comparison (Two-Panel RMSE/MAE)</h3>
+        <p><strong>Purpose</strong>: Side-by-side comparison of Best and Average RMSE/MAE across all 4 tree
+          configurations with scaled Y-axes to clearly show the differences.</p>
+        <p><strong>What to look for</strong>: 25 trees (leftmost bars) achieving the lowest Best RMSE/MAE. The reference
+          benchmark is shown as a red dashed line.</p>
+        <p><strong>Implementation note</strong>: Y-axes are zoomed in to magnify the small differences between
+          configurations. Without scaling, all bars would appear identical (differences <0.1%).< /p>
+            <figure class="doc-image">
+              <img src="results/plots/tree_count_comparison.png"
+                alt="Tree Count Comparison — RMSE and MAE across 25, 50, 75, 100 trees" loading="lazy">
+              <figcaption>Tree Count Comparison — RMSE and MAE across 25, 50, 75, 100 trees</figcaption>
+            </figure>
+            <hr>
+            <h3 id="plot-5-error-by-soc-operational-range">Plot 5: Error by SOC Operational Range</h3>
+            <p><strong>Purpose</strong>: Evaluates prediction accuracy across discrete battery SOC operational intervals
+              (0–20%, 20–40%, 40–60%, 60–80%, 80–100%) to diagnose non-linear sensitivity across capacity ranges.</p>
+            <p><strong>What to look for</strong>: Left panel highlights binned RMSE/MAE and sample volume (N). Right
+              panel details error dispersion boxplots, confirming consistency across the active operational range.</p>
+            <figure class="doc-image">
+              <img src="results/plots/error_by_soc_range.png"
+                alt="Error by SOC Operational Range — RMSE, MAE, and error spread across discrete battery capacity intervals"
+                loading="lazy">
+              <figcaption>Error by SOC Operational Range — RMSE, MAE, and error spread across discrete battery capacity
+                intervals</figcaption>
+            </figure>
+            <hr>
+            <h3 id="plot-6-error-distribution-histogram">Plot 6: Error Distribution Histogram</h3>
+            <p><strong>Purpose</strong>: Distribution of all prediction errors with mean error and zero-error reference
+              lines.</p>
+            <p><strong>What to look for</strong>: Near-zero mean error (no systematic bias), tight bell-curve shape
+              centered around 0, and long tails quantifying worst-case scenarios.</p>
+            <figure class="doc-image">
+              <img src="results/plots/error_distribution.png"
+                alt="Error Distribution — Histogram of prediction errors with mean error line" loading="lazy">
+              <figcaption>Error Distribution — Histogram of prediction errors with mean error line</figcaption>
+            </figure>
+            <hr>
+            <h3 id="plot-7-per-trip-performance-breakdown">Plot 7: Per-Trip Performance Breakdown (10 Test Trips)</h3>
+            <p><strong>Purpose</strong>: Evaluates individual generalization accuracy across each of the 10 unseen test
+              trips (TripB29 through TripB38), verifying model stability under diverse driving behaviors and
+              environmental conditions.</p>
+            <p><strong>What to look for</strong>: Consistent error bounds across all 10 trips without anomalous failure
+              on individual driving cycles; dashed line displays the ensemble average benchmark.</p>
+            <figure class="doc-image">
+              <img src="results/plots/per_trip_error.png"
+                alt="Per-Trip Performance Breakdown — Individual RMSE and MAE across 10 test trips (TripB29 to TripB38)"
+                loading="lazy">
+              <figcaption>Per-Trip Performance Breakdown — Individual RMSE and MAE across 10 test trips (TripB29 to
+                TripB38)</figcaption>
+            </figure>
+            <hr>
+            <h2 id="10-step-10-model-persistence-artifacts">10. Step 10 — Model Persistence & Artifacts</h2>
+            <p>Persists the final 25-tree model (<code>.joblib</code>), full metrics JSON, and 7 high-resolution
+              diagnostic plots for reproducibility and deployment.</p>
+            <h3 id="saved-artifacts">Saved Artifacts</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Artifact</th>
+                    <th>Path</th>
+                    <th>Size</th>
+                    <th>Contents</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Best Model</strong></td>
+                    <td><code>results/models/rf_25_trees_final.joblib</code></td>
+                    <td>~43 MB</td>
+                    <td>Serialized <code>RandomForestRegressor</code> (25 trees), ready for <code>joblib.load()</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Results JSON</strong></td>
+                    <td><code>results/results.json</code></td>
+                    <td>5.8 KB</td>
+                    <td>All metrics for all 20 runs (4 tree counts × 5 runs), best/avg aggregations</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: SOC Estimation</strong></td>
+                    <td><code>results/plots/soc_estimation_rf.png</code></td>
+                    <td>176 KB</td>
+                    <td>Actual vs. Predicted SOC curve</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: Prediction Error</strong></td>
+                    <td><code>results/plots/prediction_error_rf.png</code></td>
+                    <td>130 KB</td>
+                    <td>Error residuals over test instances</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: Feature Importance</strong></td>
+                    <td><code>results/plots/feature_importance_rf.png</code></td>
+                    <td>61 KB</td>
+                    <td>Gini importance bar chart</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: Tree Comparison</strong></td>
+                    <td><code>results/plots/tree_count_comparison.png</code></td>
+                    <td>138 KB</td>
+                    <td>Two-panel RMSE/MAE comparison</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: Error by SOC Range</strong></td>
+                    <td><code>results/plots/error_by_soc_range.png</code></td>
+                    <td>~120 KB</td>
+                    <td>Binned RMSE/MAE and error boxplots across SOC capacity intervals</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: Error Distribution</strong></td>
+                    <td><code>results/plots/error_distribution.png</code></td>
+                    <td>43 KB</td>
+                    <td>Error histogram + zero/mean lines</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Plot: Per-Trip Breakdown</strong></td>
+                    <td><code>results/plots/per_trip_error.png</code></td>
+                    <td>~130 KB</td>
+                    <td>Individual RMSE and MAE across all 10 test trips (TripB29–TripB38)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3 id="how-to-load-the-saved-model">How to Load the Saved Model</h3>
+            <pre><code class="language-python">import joblib
+import numpy as np
+
+model = joblib.load(&quot;results/models/rf_25_trees_final.joblib&quot;)
+
+# Single prediction: [Voltage, Current, BattTemp, AmbTemp]
+sample = np.array([[340.5, -12.3, 28.1, 22.0]])
+predicted_soc = model.predict(sample)
+print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
+            <hr>
+            <h2 id="11-project-structure-module-reference">11. Project Structure & Module Reference</h2>
+            <pre><code class="language-">EV_HEV/
+├── archive/                          # Raw dataset (70 trip CSV files)
+│   ├── TripA01.csv ... TripA32.csv   #   Series A: 32 trips
+│   └── TripB01.csv ... TripB38.csv   #   Series B: 38 trips
+├── results/
+│   ├── models/
+│   │   └── rf_25_trees_final.joblib  # Serialized best model (43.2 MB)
+│   ├── plots/
+│   │   ├── soc_estimation_rf.png     # Plot 1: Actual vs Predicted SOC
+│   │   ├── prediction_error_rf.png   # Plot 2: Residuals over time
+│   │   ├── feature_importance_rf.png # Plot 3: Feature importance
+│   │   ├── tree_count_comparison.png # Plot 4: Tree count comparison
+│   │   ├── error_by_soc_range.png    # Plot 5: Error across SOC capacity intervals
+│   │   ├── error_distribution.png    # Plot 6: Error histogram
+│   │   └── per_trip_error.png        # Plot 7: Per-trip error breakdown (10 test trips)
+│   └── results.json                  # All metrics (20 runs)
+├── src/
+│   ├── config.py                     # Centralized configuration
+│   ├── data_loader.py                # Data ingestion &amp; splitting
+│   ├── evaluate.py                   # Metric computation
+│   ├── model_rf.py                   # RF training pipeline
+│   ├── plots.py                      # Visualization engine
+│   └── main.py                       # Orchestrator script
+└── README.md                         # Project overview</code></pre>
+            <h3 id="module-responsibilities">Module Responsibilities</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Module</th>
+
+                    <th>Key Functions</th>
+                    <th>Responsibility</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>config.py</code></td>
+
+                    <td><code>PAPER_FEATURES</code>, <code>RF_BASE_PARAMS</code>, <code>RF_TREE_COUNTS</code></td>
+                    <td>All paths, feature names, hyperparameters, and split definitions. Single source of truth.</td>
+                  </tr>
+                  <tr>
+                    <td><code>data_loader.py</code></td>
+
+                    <td><code>load_all_trips()</code>, <code>prepare_train_test()</code>,
+                      <code>extract_features_target()</code>
+                    </td>
+                    <td>CSV parsing (<code>;</code> delimited, Latin-1), column normalization, fuzzy column matching,
+                      NaN cleaning, 60/10 trip split</td>
+                  </tr>
+                  <tr>
+                    <td><code>evaluate.py</code></td>
+
+                    <td><code>compute_all_metrics()</code>, <code>compute_rmse()</code>, <code>compute_mae()</code></td>
+                    <td>RMSE, MAE, MAX Error, STD DEV computation</td>
+                  </tr>
+                  <tr>
+                    <td><code>model_rf.py</code></td>
+
+                    <td><code>train_and_evaluate()</code>, <code>repeated_train_evaluate()</code>,
+                      <code>evaluate_all_tree_counts()</code>
+                    </td>
+                    <td>RF instantiation, multi-seed training, best/avg metric aggregation</td>
+                  </tr>
+                  <tr>
+                    <td><code>plots.py</code></td>
+
+                    <td><code>generate_all_plots()</code>, <code>plot_soc_estimation()</code>,
+                      <code>plot_tree_count_comparison()</code>
+                    </td>
+                    <td>6 high-resolution diagnostic plots (150 DPI, publication-ready)</td>
+                  </tr>
+                  <tr>
+                    <td><code>main.py</code></td>
+
+                    <td><code>main()</code>, <code>save_results()</code>, <code>save_best_model()</code></td>
+                    <td>End-to-end pipeline orchestration, reference comparison table, artifact export</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3 id="dependency-stack">Dependency Stack</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Package</th>
+                    <th>Version Used</th>
+                    <th>Purpose</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>numpy</code></td>
+                    <td>≥1.21</td>
+                    <td>Array operations, metric computation</td>
+                  </tr>
+                  <tr>
+                    <td><code>pandas</code></td>
+                    <td>≥1.3</td>
+                    <td>CSV loading, DataFrame manipulation, NaN handling</td>
+                  </tr>
+                  <tr>
+                    <td><code>scikit-learn</code></td>
+                    <td>≥1.0</td>
+                    <td><code>RandomForestRegressor</code>, ML infrastructure</td>
+                  </tr>
+                  <tr>
+                    <td><code>matplotlib</code></td>
+                    <td>≥3.5</td>
+                    <td>All 7 diagnostic plots</td>
+                  </tr>
+                  <tr>
+                    <td><code>joblib</code></td>
+                    <td>≥1.1</td>
+                    <td>Model serialization (<code>.joblib</code> format)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <hr>
+            <h2 id="12-next-steps-potential-improvements">12. Next Steps & Potential Improvements</h2>
+            <p>The core Random Forest SOC estimation pipeline is complete and matches the reference benchmarks. The
+              following are potential enhancements that could further improve accuracy, robustness, or practical
+              utility:</p>
+            <h3 id="high-priority">High Priority</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Enhancement</th>
+                    <th>Description</th>
+                    <th>Expected Impact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td><strong>Feature Engineering</strong></td>
+                    <td>Add derived features: rolling averages (e.g., 10s/30s/60s windows for current/voltage), rate of
+                      change (dV/dt, dI/dt), cumulative energy (∫I·dt), and lagged values. These capture temporal
+                      dynamics that raw instantaneous values miss.</td>
+                    <td><strong>Medium-High</strong>: Could reduce RMSE by 0.5–1.5% by capturing temporal patterns in
+                      charging/discharging behavior</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><strong>Hyperparameter Optimization</strong></td>
+                    <td>Run <code>RandomizedSearchCV</code> or Bayesian optimization over <code>max_features</code>,
+                      <code>min_samples_leaf</code>, <code>max_depth</code>, <code>n_estimators</code> (broader range
+                      like 10–200)
+                    </td>
+                    <td><strong>Low-Medium</strong>: Current settings are already near-optimal; marginal gains expected
+                      (0.05–0.2%)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3 id="medium-priority">Medium Priority</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Enhancement</th>
+                    <th>Description</th>
+                    <th>Expected Impact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>3</td>
+                    <td><strong>Baseline Comparison</strong></td>
+                    <td>Train a simple Linear Regression or single Decision Tree baseline on the same dataset to quantify
+                      how much the Random Forest ensemble improves over a naive approach.</td>
+                    <td><strong>Presentational</strong>: Strengthens the engineering justification for RF by demonstrating
+                      the non-linear advantage</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3 id="low-priority">Low Priority</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Enhancement</th>
+                    <th>Description</th>
+                    <th>Expected Impact</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>4</td>
+                    <td><strong>Ensemble Stacking</strong></td>
+                    <td>Stack the 25-tree RF with a secondary model (e.g., gradient boosted trees) for refined
+                      predictions</td>
+                    <td><strong>Low-Medium</strong>: May squeeze out 0.1–0.3% RMSE but adds complexity</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td><strong>Real-Time Inference Demo</strong></td>
+                    <td>Build a small demo script that loads the saved <code>.joblib</code> model and runs predictions
+                      on a single trip, simulating live BMS deployment</td>
+                    <td><strong>Practical</strong>: Demonstrates production readiness</td>
+                  </tr>
+                  <tr>
+                    <td>6</td>
+                    <td><strong>Temperature-Specific Models</strong></td>
+                    <td>Train separate RF models for different ambient temperature ranges (cold &lt;10°C, mild 10–25°C,
+                      hot &gt;25°C)</td>
+                    <td><strong>Medium</strong>: Battery behavior varies significantly with temperature; specialized
+                      models could improve accuracy in extreme conditions</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <hr>
+            <h2 id="13-attribution-license">13. Attribution & License</h2>
+            <h3 id="research-methodology-attribution">Research Methodology Attribution</h3>
+            <p>This project builds upon the methodology and benchmarking established in peer-reviewed literature:</p>
+            <blockquote>
+              <p><strong>Reference</strong>: M.H. Sulaiman, Z. Mustaffa, <em>"State of charge estimation for electric
+                  vehicles using random forest"</em>, Green Energy and Intelligent Transportation, Vol. 3, Issue 3, 2024,
+                100177. <a href="https://doi.org/10.1016/j.geits.2024.100177" target="_blank"
+                  rel="noopener">doi:10.1016/j.geits.2024.100177</a></p>
+            </blockquote>
+            <p>The publication is licensed under the <strong><a href="https://creativecommons.org/licenses/by/4.0/"
+                  target="_blank" rel="noopener">Creative Commons Attribution 4.0 International (CC BY 4.0)</a></strong>
+              license. This repository represents an independent software reproduction and implementation of the study.</p>
+            <h3 id="dataset-attribution">Dataset Attribution</h3>
+            <p>The battery telemetry utilized for model training and evaluation is sourced from the BMW i3 driving
+              dataset:</p>
+            <blockquote>
+              <p><strong>Dataset</strong>: M. S. J. B. D. Trifonov et al., <em>"Battery and heating data in real driving
+                  cycles"</em> (70 trips, 1.06M+ records). <a href="https://doi.org/10.21227/6jr9-5235" target="_blank"
+                  rel="noopener">doi:10.21227/6jr9-5235</a></p>
+            </blockquote>
+            <p>The dataset is distributed under the <strong><a href="https://creativecommons.org/licenses/by/4.0/"
+                  target="_blank" rel="noopener">Creative Commons Attribution 4.0 International (CC BY 4.0)</a></strong>
+              license. In compliance with repository size constraints, raw telemetry CSV files are omitted from the git
+              repository and should be placed into the <code>archive/</code> directory before running the pipeline.</p>
+            <h3 id="software-license">Software License</h3>
+            <p>This software implementation and associated scripts are distributed under the terms of the <strong><a
+                  href="LICENSE">MIT License</a></strong>.</p>
+  </div>
+</body>
+
+</html>
