@@ -152,6 +152,11 @@ To rigorously evaluate the necessity and advantages of the ensemble Random Fores
 
 ```
 EV_HEV/
+├── app/                             # Interactive BMS Digital Twin Dashboard
+│   ├── server.py                    # Lightweight HTTP server & ML inference API
+│   ├── index.html                   # Instrument cluster single-page UI
+│   ├── style.css                    # Design system (ceramic & deep pine palette)
+│   └── app.js                       # 60fps trip replayer & Canvas charting engine
 ├── archive/                         # Raw dataset (70 trip CSV files + metadata)
 │   ├── TripA01.csv ... TripA32.csv
 │   └── TripB01.csv ... TripB38.csv
@@ -189,6 +194,7 @@ EV_HEV/
 
 ### Module Responsibilities
 
+- **`app/`**: Standalone interactive BMS digital twin web dashboard. Features live trip telemetry playback across test routes (TripB29 to TripB38), real-time side-by-side inference against Random Forest, Decision Tree, and KNN, and an interactive What-If scenario sandbox.
 - **`Random_Forest/`**: Contains the full implementation of the proposed 25-tree ensemble model, including hyperparameter grid exploration (25–100 trees), multi-seed evaluation, and extensive diagnostic visualizations.
 - **`Decision_Tree/`**: Isolates the single-tree baseline to demonstrate the empirical benefits of ensemble variance reduction and bagging.
 - **`KNN/`**: Implements standardized feature scaling and instance-based nearest-neighbor regression to benchmark against distance-based methods and analyze onboard ECU computational feasibility.
@@ -257,6 +263,14 @@ Execute individual isolated baselines to reproduce the comparative benchmark:
   ```bash
   python KNN/src/main.py
   ```
+
+### Launching the Interactive Web Dashboard
+
+To run the real-time BMS digital twin dashboard and trip replayer:
+```bash
+python app/server.py
+```
+Then open [`http://localhost:8000`](http://localhost:8000) in your browser.
 
 ---
 

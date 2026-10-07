@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMS Digital Twin — Electric Vehicle SOC Estimation</title>
+  <meta name="description" content="Hardware-in-the-loop digital twin and interactive telemetry dashboard for Electric Vehicle Battery Management System (BMS) State of Charge (SOC) estimation using Random Forest, Decision Tree, and KNN models.">
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+
+  <div class="dashboard-container">
+    
+    <!-- ========================================================= -->
+    <!-- HEADER                                                    -->
+    <!-- ========================================================= -->
+    <header class="bms-header">
+      <div class="header-left">
+        <h1>BMS Digital Twin &bull; SOC Estimation Engine</h1>
+        <p class="sub">BMW i3 (60 Ah / 350V NMC) &bull; Hardware-in-the-Loop Telemetry &amp; Inference Bench</p>
+      </div>
+      <div class="system-badge-group">
+        <span class="badge badge-outline">Dataset: 70 Trips (1.06M Samples)</span>
+        <span class="badge badge-outline" id="activeModelBadge">Active: Random Forest (25 Trees)</span>
+        <span class="badge badge-pine" id="engineStatusBadge">System Calibrated</span>
+      </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- PRIMARY TELEMETRY INSTRUMENT CLUSTER (CARDS)              -->
+    <!-- ========================================================= -->
+    <section class="telemetry-cluster" aria-label="Live BMS Telemetry">
+      
+      <!-- Hero Card: Estimated SOC -->
+      <div class="telemetry-card hero-card" id="cardSoc">
+        <div class="c-head">
+          <span class="c-label">Instantaneous SOC (<span id="dispTimestampBadge">t = 00:00</span>)</span>
+          <span class="c-pill" id="socModelPill">RF (25 Trees)</span>
+        </div>
+        <div class="c-num-hero" id="dispSoc">--.-%</div>
+        <div class="soc-bar-wrap">
+          <div class="soc-bar-fill" id="socBarFill" style="width: 0%;"></div>
+        </div>
+        <div class="c-sub" id="dispSocSub">Target Reference: --.-% &bull; Error: --.-%</div>
+      </div>
+
+      <!-- Card: Pack Voltage & Power -->
+      <div class="telemetry-card" id="cardVoltage">
+        <div class="c-head">
+          <span class="c-label">Terminal Voltage</span>
+          <span class="c-pill">Nominal: 350V</span>
+        </div>
+        <div class="c-num" id="dispVoltage">---.- V</div>
+        <div class="c-sub" id="dispPower">Pack Power: --.-- kW</div>
+      </div>
+
+      <!-- Card: Pack Current & Regen -->
+      <div class="telemetry-card" id="cardCurrent">
+        <div class="c-head">
+          <span class="c-label">Pack Current</span>
+          <span class="c-pill" id="dispCurrentState">Discharge</span>
+        </div>
+        <div class="c-num" id="dispCurrent">--.- A</div>
+        <div class="c-sub" id="dispSpeed">Vehicle Speed: --.- km/h</div>
+      </div>
+
+      <!-- Card: Thermal & Range -->
+      <div class="telemetry-card" id="cardThermal">
+        <div class="c-head">
+          <span class="c-label">Cell &amp; Ambient Temp</span>
+          <span class="c-pill">Thermal Safe</span>
+        </div>
+        <div class="c-num" id="dispTemp">--.- / --.- &deg;C</div>
+        <div class="c-sub" id="dispRange">Estimated Range: ---.- km</div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- MODE NAVIGATION                                           -->
+    <!-- ========================================================= -->
+    <nav class="mode-nav" aria-label="Dashboard Modes">
+      <button class="nav-tab active" id="tabReplayer" data-target="panelReplayer">1. Drive Cycle Replayer</button>
+      <button class="nav-tab" id="tabSandbox" data-target="panelSandbox">2. Hardware "What-If" Sandbox</button>
+      <button class="nav-tab" id="tabBenchmark" data-target="panelBenchmark">3. Architectural Benchmarks</button>
+    </nav>
+
+    <!-- ========================================================= -->
+    <!-- PANEL 1: DRIVE CYCLE REPLAYER                             -->
+    <!-- ========================================================= -->
+    <section class="panel-section active" id="panelReplayer">
+      <div class="section-head">
+        <div>
+          <h2>Real-World Drive Cycle Telemetry Replayer</h2>
+          <p class="desc">Replay unseen 10-trip evaluation datasets (TripB29 &ndash; TripB38) recorded on public roads.</p>
+        </div>
+        <div class="model-toggle-group">
+          <span style="font-size:0.75rem; font-weight:700; color:var(--bms-panel); align-self:center;">Plot Model:</span>
+          <button class="toggle-chip active" id="toggleModelRf" data-model="rf">Random Forest (25)</button>
+          <button class="toggle-chip" id="toggleModelDt" data-model="dt">Decision Tree</button>
+          <button class="toggle-chip" id="toggleModelKnn" data-model="knn">KNN (k=5)</button>
+          <button class="toggle-chip" id="toggleModelAll" data-model="all">All Overlay</button>
+        </div>
+      </div>
+
+      <div class="replayer-grid">
+        
+        <!-- Controls Column -->
+        <div class="replayer-sidebar">
+          
+          <div class="control-box">
+            <label for="selectTrip">Select Evaluation Drive Cycle:</label>
+            <select class="bms-select" id="selectTrip">
+              <option value="" disabled selected>Loading test trips...</option>
+            </select>
+
+            <div class="trip-meta-list" id="tripMetadata">
+              <div class="trip-meta-item">
+                <span class="lbl">Trip Duration:</span>
+                <span class="val" id="metaDuration">-- min</span>
+              </div>
+              <div class="trip-meta-item">
+                <span class="lbl">Initial / Final SOC:</span>
+                <span class="val" id="metaSocRange">--% &rarr; --%</span>
+              </div>
+              <div class="trip-meta-item">
+                <span class="lbl">Average Velocity:</span>
+                <span class="val" id="metaSpeed">-- km/h</span>
+              </div>
+              <div class="trip-meta-item">
+                <span class="lbl">Clean Sample Points:</span>
+                <span class="val" id="metaSamples">--</span>
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button class="btn-primary" id="btnPlayPause">Play</button>
+              <button class="btn-secondary" id="btnReset">Reset</button>
+            </div>
+
+            <div class="speed-buttons">
+              <button class="btn-speed active" id="speed1x" data-speed="1">1x</button>
+              <button class="btn-speed" id="speed2x" data-speed="2">2x</button>
+              <button class="btn-speed" id="speed5x" data-speed="5">5x</button>
+              <button class="btn-speed" id="speed10x" data-speed="10">10x</button>
+            </div>
+          </div>
+
+          <div class="control-box timeline-box">
+            <div class="timeline-info">
+              <span>Timeline Scrubber</span>
+              <span id="dispCurrentTime">00:00 / 00:00</span>
+            </div>
+            <input type="range" class="bms-slider" id="timelineScrubber" min="0" max="100" value="0" step="1">
+          </div>
+
+        </div>
+
+        <!-- Chart Column -->
+        <div class="chart-container">
+          <div class="chart-header">
+            <span class="chart-title">Real-Time State of Charge Trajectory Tracking</span>
+            <div class="chart-legend">
+              <div class="legend-item"><div class="legend-dot dot-actual"></div> Actual Measured SOC</div>
+              <div class="legend-item"><div class="legend-dot dot-rf"></div> RF Predicted SOC</div>
+              <div class="legend-item" id="legendDt" style="display:none;"><div class="legend-dot dot-dt"></div> DT Predicted</div>
+              <div class="legend-item" id="legendKnn" style="display:none;"><div class="legend-dot dot-knn"></div> KNN Predicted</div>
+            </div>
+          </div>
+
+          <canvas id="socChart" width="800" height="380"></canvas>
+
+          <div class="chart-stats-strip">
+            <div class="stat-item">
+              <span class="s-lbl">Trip Cumulative RMSE</span>
+              <span class="s-val" id="statTripRmse">--.--%</span>
+            </div>
+            <div class="stat-item">
+              <span class="s-lbl">Trip Mean Absolute Error</span>
+              <span class="s-val" id="statTripMae">--.--%</span>
+            </div>
+            <div class="stat-item">
+              <span class="s-lbl">Max Peak Error</span>
+              <span class="s-val" id="statTripMaxErr">--.--%</span>
+            </div>
+            <div class="stat-item">
+              <span class="s-lbl">Instant Residual</span>
+              <span class="s-val" id="statInstantErr">--.--%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANEL 2: HARDWARE "WHAT-IF" SANDBOX                       -->
+    <!-- ========================================================= -->
+    <section class="panel-section" id="panelSandbox">
+      <div class="section-head">
+        <div>
+          <h2>Hardware "What-If" Simulation Sandbox</h2>
+          <p class="desc">Manually adjust electrical and thermal conditions to test edge cases (e.g. heavy regenerative braking, thermal extremes).</p>
+        </div>
+        <button class="btn-secondary" id="btnResetSandbox" style="padding:0.4rem 0.8rem; font-size:0.75rem;">Reset to Nominal</button>
+      </div>
+
+      <div class="sandbox-layout">
+        
+        <!-- Parameter Sliders -->
+        <div class="sandbox-slider-card">
+          
+          <!-- Voltage -->
+          <div class="slider-group">
+            <div class="slider-top">
+              <span class="slider-name">Pack Terminal Voltage</span>
+              <span class="slider-val-badge" id="valSliderVolt">351.4 V</span>
+            </div>
+            <input type="range" class="bms-slider" id="sliderVolt" min="300.0" max="400.0" step="0.2" value="351.4">
+            <div class="slider-limits"><span>Cutoff: 300.0 V</span><span>Nominal: 350.0 V</span><span>Peak Charge: 400.0 V</span></div>
+          </div>
+
+          <!-- Current -->
+          <div class="slider-group">
+            <div class="slider-top">
+              <span class="slider-name">Pack Current (Regen &harr; Discharge)</span>
+              <span class="slider-val-badge" id="valSliderCurr">-14.8 A</span>
+            </div>
+            <input type="range" class="bms-slider" id="sliderCurr" min="-120.0" max="220.0" step="0.5" value="-14.8">
+            <div class="slider-limits"><span>Max Regen: -120 A</span><span>Zero Current: 0 A</span><span>Peak Throttle: +220 A</span></div>
+          </div>
+
+          <!-- Battery Temp -->
+          <div class="slider-group">
+            <div class="slider-top">
+              <span class="slider-name">Internal Battery Temperature</span>
+              <span class="slider-val-badge" id="valSliderBattTemp">27.3 &deg;C</span>
+            </div>
+            <input type="range" class="bms-slider" id="sliderBattTemp" min="-10.0" max="50.0" step="0.5" value="27.3">
+            <div class="slider-limits"><span>Cold: -10 &deg;C</span><span>Optimal: 25 &deg;C</span><span>Thermal Limit: 50 &deg;C</span></div>
+          </div>
+
+          <!-- Ambient Temp -->
+          <div class="slider-group">
+            <div class="slider-top">
+              <span class="slider-name">Ambient Environmental Temperature</span>
+              <span class="slider-val-badge" id="valSliderAmbTemp">22.0 &deg;C</span>
+            </div>
+            <input type="range" class="bms-slider" id="sliderAmbTemp" min="-15.0" max="45.0" step="0.5" value="22.0">
+            <div class="slider-limits"><span>Winter: -15 &deg;C</span><span>Room: 20 &deg;C</span><span>Summer: 45 &deg;C</span></div>
+          </div>
+
+        </div>
+
+        <!-- Real-Time Multi-Model Comparison -->
+        <div class="sandbox-results-card">
+          
+          <div class="model-result-row champion">
+            <div>
+              <div class="m-name">Random Forest (25 Trees) &bull; Selected</div>
+              <div class="m-detail">Ensemble variance reduction &bull; Smooth continuous estimation</div>
+            </div>
+            <div class="m-score" id="sandboxRfScore">--.-%</div>
+          </div>
+
+          <div class="model-result-row">
+            <div>
+              <div class="m-name">Decision Tree (Single Tree Baseline)</div>
+              <div class="m-detail">Piecewise orthogonal partitions &bull; Susceptible to step anomalies</div>
+            </div>
+            <div class="m-score" id="sandboxDtScore">--.-%</div>
+          </div>
+
+          <div class="model-result-row">
+            <div>
+              <div class="m-name">k-Nearest Neighbors (k=5 Baseline)</div>
+              <div class="m-detail">Instance-based local vote &bull; O(N) memory requirement</div>
+            </div>
+            <div class="m-score" id="sandboxKnnScore">--.-%</div>
+          </div>
+
+          <div class="inference-specs">
+            <div style="font-weight:700; color:var(--bms-panel);">Electrical Operating State:</div>
+            <div id="sandboxStateDesc">Acceleration discharge &bull; Delivering 5.2 kW to drivetrain.</div>
+            <div style="font-size:0.75rem; color:#496860; margin-top:0.3rem;">
+              Notice how Random Forest produces smooth, stable predictions, whereas the single Decision Tree exhibits sharp partition jumps under transient current.
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- PANEL 3: ARCHITECTURAL BENCHMARK MATRIX                   -->
+    <!-- ========================================================= -->
+    <section class="panel-section" id="panelBenchmark">
+      <div class="section-head">
+        <div>
+          <h2>Comprehensive Head-to-Head Architectural Evaluation</h2>
+          <p class="desc">Rigorous test-bench comparison on 10 unseen evaluation drive cycles (Trips 61&ndash;70, 118,974 instances).</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="benchmark-table">
+          <thead>
+            <tr>
+              <th>Evaluated Model</th>
+              <th>Architecture &amp; Hyperparameters</th>
+              <th>Test RMSE</th>
+              <th>Test MAE</th>
+              <th>Max Error</th>
+              <th>Inference Time</th>
+              <th>Model Footprint</th>
+              <th>Automotive Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="champion-row">
+              <td><strong>Random Forest (25 Trees) &star;</strong></td>
+              <td>Ensemble of 25 trees (MinLeafSize=5, sqrt features)</td>
+              <td><strong>5.8876%</strong></td>
+              <td><strong>4.3736%</strong></td>
+              <td><strong>26.6956%</strong></td>
+              <td>~1.2 ms</td>
+              <td>257.7 MB</td>
+              <td>Production Approved</td>
+            </tr>
+            <tr>
+              <td>Decision Tree (Single)</td>
+              <td>Single CART regressor (MinLeafSize=5)</td>
+              <td>7.0223%</td>
+              <td>5.2075%</td>
+              <td>41.7567%</td>
+              <td>~0.08 ms</td>
+              <td>18.0 MB</td>
+              <td>High-Variance Rejected</td>
+            </tr>
+            <tr>
+              <td>k-Nearest Neighbors</td>
+              <td>Instance-based k=5 (StandardScaler, Euclidean)</td>
+              <td>7.0826%</td>
+              <td>5.4040%</td>
+              <td>29.1223%</td>
+              <td>~64.0 ms</td>
+              <td>24.3 MB</td>
+              <td>MCU RAM Infeasible</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- FOOTER                                                    -->
+    <!-- ========================================================= -->
+    <footer class="bms-footer">
+      <div>
+        <strong>Electric Vehicle State of Charge (SOC) Estimation</strong> &bull; Department of Electrical Engineering
+      </div>
+      <div>
+        Target Vehicle: BMW i3 60 Ah / 350V &bull; Random Forest Regression (25 Trees)
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="app.js?v=2"></script>
+</body>
+</html>
