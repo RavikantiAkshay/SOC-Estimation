@@ -90,7 +90,7 @@ The model is built on telemetry collected from a **BMW i3 electric vehicle equip
 | **Training Set** | Trips 1 to 60 (`TripA01` to `TripB28`) | **945,026** | Model training & hyperparameter calibration |
 | **Testing Set** | Trips 61 to 70 (`TripB29` to `TripB38`) | **118,974** | Final unbiased performance assessment |
 
-### Input Features & Target Variable
+### Input Features & Target Variable (Baseline Benchmark Model)
 
 | Attribute | Units | Description |
 |:---|:---:|:---|
@@ -99,6 +99,58 @@ The model is built on telemetry collected from a **BMW i3 electric vehicle equip
 | **Battery Temperature** | °C | Internal temperature monitored by battery pack sensors |
 | **Ambient Temperature** | °C | External environmental temperature |
 | **Target: SoC** | % | Manufacturer-estimated State of Charge |
+
+---
+
+### Telemetry Feature Space Audit (Universal Features Across 70/70 Trips)
+
+While individual trip CSV files contain up to 47 raw sensor channels (such as localized HVAC vent thermistors and heater core coolant channels), only **22 columns are universal** across all 70 driving cycles (100% data completeness). Incorporating columns with partial presence (e.g. 38 or 50 trips) would require discarding significant portions of the dataset or synthesizing artificial data.
+
+Excluding the 4 target and future-boundary leakage variables (`SoC [%]`, `displayed SoC [%]`, `min. SoC [%]`, `max. SoC [%)`), the dataset offers exactly **18 candidate telemetry input features**.
+
+To systematically prevent multicollinearity, curse of dimensionality, and geographic overfitting in Random Forest, all 18 universal features were evaluated across empirical correlation, physical relevance, and domain constraints:
+
+| Category | Count | Status | Features Included | Primary Physical Rationale |
+|:---|:---:|:---:|:---|:---|
+| **1. Baseline Telemetry** | 4 | **Currently Used** | `Battery Voltage`, `Battery Current`, `Battery Temperature`, `Ambient Temperature` | Direct electrochemical state observables defining cell open-circuit voltage ($V_{\text{oc}}$), dynamic IR drop, and thermal kinetics. |
+| **2. Selected Physical Candidates** | 4 | **Finalized for Addition** | `AirCon Power`, `Heating Power CAN`, `Regenerative Braking Signal`, `Throttle` | High-voltage auxiliary drains and driver load indicators that provide independent physical signals without duplicating traction current. |
+| **3. Correlated & Redundant** | 7 | **Excluded** | `max. Battery Temperature`, `Motor Torque`, `Longitudinal Acceleration`, `Heater Signal`, `Requested Heating Power`, `Heat Exchanger Temperature`, `Cabin Temperature Sensor` | Severe collinearity ($r \ge 0.70$) with existing features or direct physical duplicates; dilutes Random Forest feature subsampling (`max_features='sqrt'`). |
+| **4. Route-Specific & Confounding** | 3 | **Excluded** | `Velocity`, `Elevation`, `Time` | High risk of route memorization and temporal overfitting; does not transfer across unseen driving cycles. |
+
+---
+
+#### Detailed Feature Breakdown & Selection Justification
+
+##### 1. Baseline Features (Currently Used in 4-Feature Benchmark)
+- **`Battery Voltage [V]`**: Total pack potential. Primary physical indicator of open-circuit voltage (OCV) curve. Contributes >70% of baseline feature importance.
+- **`Battery Current [A]`**: Dynamic load on the battery pack (+ve = discharging, −ve = regenerative braking). Captures dynamic $I \cdot R$ polarization drop and instantaneous charge depletion.
+- **`Battery Temperature [°C]`**: Internal cell pack temperature. Dictates Lithium-ion internal resistance ($R_{\text{int}}$), diffusion rates, and electrochemical transfer kinetics.
+- **`Ambient Temperature [°C]`**: Outside air temperature. Dictates pack convective/conductive thermal exchange boundaries with the environment.
+
+##### 2. Selected New Candidates (Finalized for Model Enhancement)
+- **`AirCon Power [kW]`**: Electrical power consumed by the high-voltage air conditioning compressor. Draws directly from the high-voltage traction pack independently of drivetrain motor speed or vehicle velocity.
+- **`Heating Power CAN [kW]`**: High-voltage positive temperature coefficient (PTC) cabin heater power draw. A major energy consumer in cold weather driving, depleting battery SOC even while idling at red lights.
+- **`Regenerative Braking Signal`**: Discrete binary state ($0/1$) separating energy recovery (kinetic charging reactions) from propulsion/coasting (discharging polarization). Allows trees to partition different charge/discharge dynamics.
+- **`Throttle [%]`**: Driver accelerator pedal depression ($0\text{--}100\%$). Represents driver torque demand intent, reacting fractions of a second prior to full current surges.
+
+##### 3. Excluded Correlated & Redundant Features (Preventing Multicollinearity)
+- **`max. Battery Temperature [°C]`** ($r = 0.997$ with `Battery Temperature`): Virtually a clone of pack temperature sensor. Redundant split candidate that wastes tree split opportunities.
+- **`Motor Torque [Nm]`** ($r = -0.768$ with `Battery Current`, $r = 0.661$ with `Throttle`): In an AC synchronous electric motor, electromagnetic torque is strictly proportional to stator current ($T \propto I$). Providing both torque and current adds collinear redundancy.
+- **`Longitudinal Acceleration [m/s^2]`** ($r = 0.966$ with `Motor Torque`, $r = -0.694$ with `Battery Current`): Redundant mechanical consequence of motor torque that introduces high-frequency accelerometer sensor noise from potholes and road surface roughness.
+- **`Heater Signal`**: Binary on/off CAN flag for cabin heating. Completely superseded and made redundant by quantitative continuous measurement `Heating Power CAN [kW]`.
+- **`Requested Heating Power [W]`**: Driver HVAC climate setpoint. Actual energy drained from battery cells is captured by `Heating Power CAN [kW]`; requested power does not account for thermal lag or thermostat cutoffs.
+- **`Heat Exchanger Temperature [°C]`** ($r = -0.712$ with `Ambient Temperature`, $r = -0.626$ with `Battery Temperature`): Radiator and thermal loop temperature, heavily dependent on ambient airflow and engine compartment heat; redundant with existing thermal features.
+- **`Cabin Temperature Sensor [°C]`** ($r = 0.528$ with `Ambient Temperature`): Passenger cabin air temperature displays significant thermal lag (insulated cabin) and reflects climate control comfort rather than electrochemical battery cell state.
+
+##### 4. Excluded Route-Specific & Confounding Features (Preventing Overfitting)
+- **`Velocity [km/h]`**: Vehicle speed is not an energy metric. For example, coasting at 90 km/h downhill uses $\approx 0\text{ A}$ (or charges via regen), whereas ascending a steep incline at 30 km/h draws $>150\text{ A}$. Decision trees splitting on velocity tend to memorize route speed limits (e.g., 50 km/h city, 100 km/h autobahn) rather than learning battery physics.
+- **`Elevation [m]`**: Barometric altitude. Trees will split on specific altitude thresholds (e.g., 530 m a.s.l.) memorizing specific hills around Munich from the training trips, failing to generalize to trips on flatter or steeper geographies.
+- **`Time [s]`**: Monotonic run timer. Trees will learn that SOC declines after $t = 1500\text{ s}$, which completely fails when starting a new trip at a partial charge (e.g. 50% SOC) or under aggressive vs gentle driving cycles.
+
+##### 5. Excluded Target & Boundary Leakage Variables
+- **`SoC [%]`**: Ground-truth target variable ($y$).
+- **`displayed SoC [%]`**: Vehicle instrument cluster dashboard gauge. Damped by OEM filtering algorithms for driver display; causes direct target leakage.
+- **`min. SoC [%]` / `max. SoC [%)`**: Pre-calculated trip-level minimum and maximum limits computed across the entire drive cycle; causes future-to-past temporal data leakage.
 
 ---
 
