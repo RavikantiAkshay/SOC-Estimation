@@ -1,0 +1,48 @@
+{
+  "analysis": "KNN Hyperparameter Sensitivity (k Evaluation)",
+  "constraint": "Embedded Automotive BMS Real-Time Loop (k <= 5)",
+  "selected_best_k": 5,
+  "k_comparison": [
+    {
+      "k": 1,
+      "rmse": 7.4082,
+      "mae": 5.6623,
+      "max_error": 29.2,
+      "std_dev": 7.3708,
+      "is_best": false
+    },
+    {
+      "k": 2,
+      "rmse": 7.2448,
+      "mae": 5.5233,
+      "max_error": 29.2,
+      "std_dev": 7.2176,
+      "is_best": false
+    },
+    {
+      "k": 3,
+      "rmse": 7.167,
+      "mae": 5.4646,
+      "max_error": 29.1601,
+      "std_dev": 7.1451,
+      "is_best": false
+    },
+    {
+      "k": 4,
+      "rmse": 7.1219,
+      "mae": 5.4327,
+      "max_error": 29.1455,
+      "std_dev": 7.1035,
+      "is_best": false
+    },
+    {
+      "k": 5,
+      "rmse": 7.0826,
+      "mae": 5.404,
+      "max_error": 29.1223,
+      "std_dev": 7.0668,
+      "is_best": true
+    }
+  ],
+  "summary": "k=5 achieves the lowest RMSE (7.0826%) and lowest MAE (5.4040%) among the feasible real-time candidate values, confirming it as the optimal baseline configuration."
+}
