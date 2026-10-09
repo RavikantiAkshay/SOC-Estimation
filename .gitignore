@@ -42,6 +42,8 @@ KNN/results/models/*.joblib
 !KNN/results/models/.gitkeep
 RF_New/results/models/*.joblib
 !RF_New/results/models/.gitkeep
+RF_Temporal/results/models/*.joblib
+!RF_Temporal/results/models/.gitkeep
 
 # Testing and coverage
 .pytest_cache/
