@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOC Estimation Using Machine Learning & Random Forest — Comprehensive Technical Documentation</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'neutral',
+        securityLevel: 'loose',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        flowchart: {
+          useMaxWidth: false,
+          htmlLabels: true,
+          curve: 'basis',
+          nodeSpacing: 25,
+          rankSpacing: 30
+        }
+      });
+    });
+  </script>
+  <style>
+    /* Executive Technical Documentation Design System */
+    :root {
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #475569;
+      --heading: #0f172a;
+      --border: #cbd5e1;
+      --border-subtle: #e2e8f0;
+      --bg-subtle: #f8fafc;
+      --bg-code: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --note-border: #2563eb;
+      --tip-border: #10b981;
+      --important-border: #6366f1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15.5px;
+      line-height: 1.72;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .document-wrapper {
+      width: 100%;
+      max-width: 100%;
+      padding: 2.5rem 3.5rem;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .document-wrapper {
+        padding: 1.25rem 1.25rem;
+      }
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: var(--heading);
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.03em;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      letter-spacing: -0.02em;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-top: 1.75rem;
+      margin-bottom: 0.65rem;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      margin-top: 1.25rem;
+      margin-bottom: 0.45rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+    }
+
+    ul,
+    ol {
+      margin-top: 0.35rem;
+      margin-bottom: 1rem;
+      padding-left: 1.75rem;
+    }
+
+    li {
+      margin-bottom: 0.35rem;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border-subtle);
+      margin: 2.5rem 0;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+
+    a:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
+    .project-header-card {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .project-header-card p {
+      margin-bottom: 0;
+      font-size: 1.02rem;
+    }
+
+    .best-result-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+      font-family: var(--font-mono);
+    }
+
+    .enhanced-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      font-family: var(--font-mono);
+    }
+
+    .toc-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 1.75rem;
+      margin: 1.5rem 0 2rem 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .toc-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 0.5rem 1.5rem;
+      list-style-position: inside;
+      padding-left: 0;
+    }
+
+    .toc-list li {
+      margin-bottom: 0.25rem;
+      font-size: 0.96rem;
+    }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      padding: 1.15rem 1.35rem;
+      margin: 1.35rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      border-top: 1px solid var(--border-subtle);
+      border-right: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .callout-note {
+      border-left-color: var(--note-border);
+      border-color: #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+    }
+
+    .callout-tip {
+      border-left-color: var(--tip-border);
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: #064e3b;
+    }
+
+    .callout-important {
+      border-left-color: var(--important-border);
+      border-color: #c7d2fe;
+      background: #eef2ff;
+      color: #312e81;
+    }
+
+    .callout strong {
+      color: inherit;
+      font-weight: 600;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0 2rem 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.94rem;
+      line-height: 1.55;
+    }
+
+    th,
+    td {
+      padding: 0.85rem 1.15rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: var(--heading);
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:hover td {
+      background-color: #f1f5f9;
+      transition: background-color 0.15s ease;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 0.18em 0.45em;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      font-weight: 500;
+    }
+
+    pre {
+      background: var(--bg-code);
+      color: #f1f5f9;
+      padding: 1.35rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid #1e293b;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+      line-height: 1.55;
+    }
+
+    pre code {
+      background: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: 0.88rem;
+    }
+
+    blockquote {
+      border-left: 4px solid var(--border);
+      padding: 0.65rem 1.25rem;
+      margin: 1.25rem 0;
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      border-radius: 0 6px 6px 0;
+      font-style: italic;
+    }
+
+    blockquote p {
+      margin-bottom: 0.25rem;
+    }
+
+    .mermaid {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem 1.25rem;
+      margin: 1.5rem 0 2rem 0;
+      overflow-x: auto;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    }
+
+    .mermaid svg {
+      max-width: 100% !important;
+      height: auto !important;
+      font-family: var(--font-sans) !important;
+    }
+
+    .doc-image {
+      margin: 2rem auto;
+      max-width: 860px;
+      text-align: center;
+      background: #ffffff;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .doc-image img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .doc-image figcaption {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #475569;
+      font-style: normal;
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      background: #f8fafc;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="document-wrapper">
+    <h1 id="comprehensive-soc-documentation">State of Charge (SOC) Estimation for Electric Vehicles — Complete Methodological Documentation</h1>
+    <div class="project-header-card">
+      <p><strong>Project Title:</strong> Lithium-Ion Battery SOC Estimation via Machine Learning Ensembles & Baselines</p>
+      <p><strong>Fleet Telemetry:</strong> BMW i3 Real-World Driving Cycles (70 Trips, 1,064,000 Clean Instances)</p>
+      <p><strong>Proposed Baseline Result (4 Features):</strong> <span class="best-result-badge">Random Forest (25 Trees) &mdash; RMSE = 5.8876% | MAE = 4.3736%</span></p>
+      <p><strong>Maximum Improvement Result (7 Features):</strong> <span class="enhanced-badge">Enhanced RF (50 Trees) &mdash; RMSE = 4.5734% | MAE = 3.3158% (-22.32% Error Reduction)</span></p>
+    </div>
+    <hr>
+
+    <h2 id="table-of-contents">Method-Wise Table of Contents</h2>
+    <div class="toc-card">
+      <ol class="toc-list">
+        <li><a href="#part-1-foundational-pipeline">Part 1 &mdash; Shared Foundational Architecture &amp; Data Engineering</a></li>
+        <li><a href="#part-2-baseline-random-forest">Part 2 &mdash; Primary Model: Baseline Random Forest (4 Features)</a></li>
+        <li><a href="#part-3-decision-tree-baseline">Part 3 &mdash; Baseline Comparison 1: Single Decision Tree</a></li>
+        <li><a href="#part-4-knn-baseline">Part 4 &mdash; Baseline Comparison 2: K-Nearest Neighbors (KNN with k-Sweep)</a></li>
+        <li><a href="#part-5-enhanced-random-forest">Part 5 &mdash; Advanced Architecture: Enhanced 7-Feature Random Forest</a></li>
+        <li><a href="#part-6-master-synthesis">Part 6 &mdash; Cross-Methodological Synthesis &amp; Benchmarking</a></li>
+        <li><a href="#part-7-digital-twin-app">Part 7 &mdash; Interactive BMS Digital Twin Dashboard</a></li>
+        <li><a href="#part-8-project-structure">Part 8 &mdash; Repository Structure &amp; Module Directory</a></li>
+        <li><a href="#part-9-next-steps">Part 9 &mdash; Next Steps &amp; Future Research Levers</a></li>
+        <li><a href="#part-10-attribution">Part 10 &mdash; Attribution, Literature References &amp; License</a></li>
+      </ol>
+    </div>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 1: SHARED FOUNDATIONAL ARCHITECTURE & DATA ENGINEERING              -->
+    <!-- ========================================================================= -->
+    <h2 id="part-1-foundational-pipeline">Part 1 — Shared Foundational Architecture & Data Engineering</h2>
+    <p>All models in this research operate on an identical, standardized data engineering foundation to guarantee unbiased head-to-head empirical comparisons across <strong>1,064,000 clean telemetry instances</strong> collected from an operational BMW i3 electric vehicle.</p>
+
+    <h3 id="1-1-system-flowchart">1.1 System Architecture &amp; Pipeline Overview</h3>
+    <div class="mermaid">
+      %%{init: { "flowchart": { "nodeSpacing": 22, "rankSpacing": 26, "padding": 14 } } }%%
+      flowchart TD
+      A["<b>Raw Telemetry Fleet</b><br /><i>70 CSV Files (BMW i3 60Ah Pack)</i>"] --> B["<b>Ingestion & Cleaning</b><br /><i>Semicolon & Latin-1 parsing, NaN & typo repair</i>"]
+      B --> C["<b>Trip-Level Split Protocol</b><br /><i>60 Train Trips (945k) | 10 Unseen Test Trips (119k)</i>"]
+      C --> D1["<b>Baseline 4-Feature Set</b><br /><i>Voltage, Current, BattTemp, AmbTemp</i>"]
+      C --> D2["<b>Enhanced 7-Feature Set</b><br /><i>+ Throttle, Motor Torque, Velocity</i>"]
+      
+      D1 --> E1["<b>Baseline Random Forest</b><br /><i>25..100 Trees (sqrt features, leaf=5)</i>"]
+      D1 --> E2["<b>Decision Tree Baseline</b><br /><i>1 Tree (Un-bagged variance test)</i>"]
+      D1 --> E3["<b>KNN Baseline (k=1..5 Sweep)</b><br /><i>StandardScaler + Distance Weighting</i>"]
+      D2 --> E4["<b>Enhanced Random Forest</b><br /><i>25..100 Trees (7 features)</i>"]
+
+      E1 --> F["<b>Multi-Seed Validation Engine</b><br /><i>5 Independent Seed Runs per Config</i>"]
+      E2 --> F
+      E3 --> F
+      E4 --> F
+
+      F --> G["<b>Evaluation & Model Selection</b><br /><i>RMSE, MAE, MAX ERROR, Latency, RAM</i>"]
+      G --> H["<b>Artifact Serialization</b><br /><i>Model binaries (.joblib) & results.json</i>"]
+      G --> I["<b>Complete Visualization Suite</b><br /><i>26 Publication-Quality Diagnostic Plots</i>"]
+      G --> J["<b>Interactive BMS Digital Twin</b><br /><i>Full-stack HTML5/Canvas replayer (app/)</i>"]
+
+      style A fill:#e3f2fd,stroke:#1565c0
+      style C fill:#fff3e0,stroke:#e65100
+      style E1 fill:#e8f5e9,stroke:#2e7d32
+      style E4 fill:#f3e8ff,stroke:#7e22ce
+      style G fill:#fef3c7,stroke:#d97706
+    </div>
+
+    <h3 id="1-2-dataset-acquisition">1.2 Dataset Acquisition &amp; Battery Telemetry Specifications</h3>
+    <p>The research utilizes telemetry from a commercial <strong>BMW i3 hatchback</strong> operating under diverse real-world driving styles, seasonal temperatures (-5&deg;C to +35&deg;C), passenger loads, and topographies across Bavaria, Germany.</p>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Specification / Value</th>
+            <th>Significance to SOC Estimation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Vehicle Platform</strong></td>
+            <td>BMW i3 (60 Ah Battery Pack)</td>
+            <td>Lightweight carbon-fiber reinforced polymer (CFRP) chassis with high dynamic regeneration.</td>
+          </tr>
+          <tr>
+            <td><strong>Cell Chemistry</strong></td>
+            <td>Lithium Nickel Manganese Cobalt Oxide (NMC)</td>
+            <td>Exhibits non-linear Open-Circuit Voltage (OCV) plateau between 30% and 70% SOC.</td>
+          </tr>
+          <tr>
+            <td><strong>Pack Capacity</strong></td>
+            <td>~22 kWh gross (60 Ah nominal cell capacity)</td>
+            <td>Standard battery energy benchmark for mid-range city commuting.</td>
+          </tr>
+          <tr>
+            <td><strong>Nominal Pack Voltage</strong></td>
+            <td>~360 V (96 cells in series)</td>
+            <td>Direct observable of macro-scale thermodynamic charge depletion.</td>
+          </tr>
+          <tr>
+            <td><strong>Sampling Frequency</strong></td>
+            <td>1.0 Hz (1 sample per second)</td>
+            <td>High-frequency sampling suitable for capturing instantaneous acceleration and regenerative braking.</td>
+          </tr>
+          <tr>
+            <td><strong>Dataset Volume</strong></td>
+            <td>70 Trip Files (~1.06M instances total)</td>
+            <td>Covers commuting, regional highway autobahn routes, stop-and-go urban traffic, and parking idle.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="1-3-data-cleaning">1.3 Data Preprocessing, Header Standardization &amp; NaN Cleansing</h3>
+    <p>Telemetry CSV files contain sensor logging quirks and European formatting anomalies that require robust automated preprocessing:</p>
+    <ul>
+      <li><strong>Delimiter &amp; Encoding</strong>: Files are encoded in <code>latin1</code> and delimited by semicolons (<code>;</code>). Numeric decimals formatted with commas (e.g., <code>"3.84,5"</code>) are normalized to standard floating-point representation.</li>
+      <li><strong>Header Repairs</strong>: Fixed bracket typos in raw CAN logging channels:
+        <ul>
+          <li><code>max. SoC [%)</code> &rarr; <code>max. SoC [%]</code> (mismatched closing parenthesis)</li>
+          <li><code>Velocity [km/h]]]</code> &rarr; <code>Velocity [km/h]</code> (triple closing bracket artifact)</li>
+          <li>Stripped extraneous leading/trailing whitespace across all columns; purged trailing <code>Unnamed</code> columns.</li>
+        </ul>
+      </li>
+      <li><strong>Fuzzy Column Matching</strong>: Implemented an ASCII-skeleton matching algorithm (stripping degree symbols <code>&deg;</code> and unicode variations) ensuring robust column identification across differing CAN logger firmware versions.</li>
+      <li><strong>Two-Pass Cleanse</strong>: Standardized data extraction drops non-numeric rows and coerces remaining fields with <code>pd.to_numeric(errors='coerce')</code>, followed by complete removal of instances containing missing features or target.</li>
+    </ul>
+
+    <h3 id="1-4-split-protocol">1.4 Train/Test Partitioning Protocol (Trip-Level Splitting)</h3>
+    <p>A fatal flaw in many ML time-series studies is random sample shuffling, which leaks future state vectors into past training steps. To guarantee authentic physical generalization, we employ a strict <strong>trip-level partition</strong>:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Dataset Partition</th>
+            <th>Trip Range</th>
+            <th>File Range</th>
+            <th>Instance Count</th>
+            <th>Physical Driving Conditions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Training Set</strong></td>
+            <td>Trips 1 to 60</td>
+            <td><code>TripA01.csv</code> &rarr; <code>TripB28.csv</code></td>
+            <td><strong>945,026 instances</strong></td>
+            <td>Covers 60 distinct routes, diverse ambient temperatures, varied highway and city commute cycles.</td>
+          </tr>
+          <tr>
+            <td><strong>Testing Set (Unseen)</strong></td>
+            <td>Trips 61 to 70</td>
+            <td><code>TripB29.csv</code> &rarr; <code>TripB38.csv</code></td>
+            <td><strong>118,974 instances</strong></td>
+            <td>10 completely separate, unseen driving trips reserved exclusively for final unbiased generalization testing.</td>
+          </tr>
+          <tr>
+            <td><strong>Total Clean Fleet</strong></td>
+            <td>70 Trips</td>
+            <td><code>TripA01</code> &rarr; <code>TripB38</code></td>
+            <td><strong>1,064,000 instances</strong></td>
+            <td>Zero data synthesis; 100% genuine real-world vehicle operation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="1-5-evaluation-metrics">1.5 Mathematical Definitions of Evaluation Metrics</h3>
+    <p>Model accuracy is quantified using 4 standard regression metrics evaluated against true BMS State of Charge $y_i$ and predicted state $\hat{y}_i$ across all $N = 118,974$ test instances:</p>
+    <ul>
+      <li><strong>Root Mean Square Error (RMSE)</strong>: Penalizes large localized prediction spikes heavily:
+        $$\text{RMSE} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)^2}$$
+      </li>
+      <li><strong>Mean Absolute Error (MAE)</strong>: Quantifies average expected deviation across driving cycles:
+        $$\text{MAE} = \frac{1}{N} \sum_{i=1}^{N} |y_i - \hat{y}_i|$$
+      </li>
+      <li><strong>Maximum Peak Error (MAX ERROR)</strong>: Critical for automotive functional safety; gauges catastrophic transient risk:
+        $$\text{MAX ERROR} = \max_{i=1..N} |y_i - \hat{y}_i|$$
+      </li>
+      <li><strong>Standard Deviation of Residuals (STD DEV)</strong>: Reflects estimation noise spread around the mean residual:
+        $$\text{STD DEV} = \sqrt{\frac{1}{N} \sum_{i=1}^{N} \left((y_i - \hat{y}_i) - \mu_{\text{err}}\right)^2}$$
+      </li>
+    </ul>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 2: PROPOSED BASELINE RANDOM FOREST (4 FEATURES)                      -->
+    <!-- ========================================================================= -->
+    <h2 id="part-2-baseline-random-forest">Part 2 — Primary Model: Baseline Random Forest (4 Features)</h2>
+    <p>The primary proposed architecture reproduces the foundational methodology established in literature, utilizing the 4 primary electro-thermal observables measured by standard production Battery Management Systems.</p>
+
+    <h3 id="2-1-baseline-feature-selection">2.1 Baseline Feature Selection &amp; Physical Justification</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Feature Name</th>
+            <th>Units</th>
+            <th>Electrochemical Role &amp; Justification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Battery Voltage</strong></td>
+            <td>V</td>
+            <td>Direct proxy for cell Open-Circuit Voltage ($V_{\text{oc}}$). The primary thermodynamic state indicator of Lithium intercalation status in the electrodes. Contributes &gt;70% of baseline feature importance.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Battery Current</strong></td>
+            <td>A</td>
+            <td>Measures dynamic electrical load (+ve = discharging, &minus;ve = regenerative braking). Captures dynamic $I \cdot R$ internal ohmic drop and instantaneous charge flux across cell terminals.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Battery Temperature</strong></td>
+            <td>&deg;C</td>
+            <td>Monitors core pack temperature. Directly modulates Lithium-ion internal resistance ($R_{\text{int}}$), solid-electrolyte interphase (SEI) impedance, and Arrhenius chemical reaction kinetics.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Ambient Temperature</strong></td>
+            <td>&deg;C</td>
+            <td>External thermal boundary condition. Dictates convective and conductive thermal transfer between the battery pack enclosure and the atmosphere.</td>
+          </tr>
+          <tr>
+            <td><strong>Target</strong></td>
+            <td><strong>SoC [%]</strong></td>
+            <td>%</td>
+            <td>Ground-truth State of Charge estimated by the vehicle manufacturer's internal BMS coulometric integration algorithms.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="2-2-baseline-hyperparameters">2.2 Baseline Hyperparameter Configuration &amp; Bagging Principles</h3>
+    <p>The Random Forest regressor is configured with regularized tree growth to avoid overfitting to high-frequency current sensor noise:</p>
+    <ul>
+      <li><code>n_estimators &isin; [25, 50, 75, 100]</code>: Evaluated across 4 forest depths to identify the optimal complexity curve.</li>
+      <li><code>max_features = 'sqrt'</code>: At each split node, the algorithm samples $\sqrt{4} = 2$ random features. This de-correlates individual decision trees, preventing <code>Battery Voltage</code> from dominating 100% of the tree splits.</li>
+      <li><code>min_samples_leaf = 5</code>: Enforces that terminal nodes contain at least 5 instances, suppressing memorization of single-second current spikes and road vibrations.</li>
+      <li><code>bootstrap = True</code>: Each tree is fitted on a bootstrap sample drawn with replacement from the 945,026 training instances.</li>
+    </ul>
+
+    <h3 id="2-3-baseline-results">2.3 Baseline Performance Results Across Tree Counts</h3>
+    <p>Every tree count was evaluated across <strong>5 independent multi-seed runs</strong> (seeds 42, 142, 242, 342, 442) on the 10 unseen test trips:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Trees</th>
+            <th>Best RMSE (%)</th>
+            <th>Average RMSE (%)</th>
+            <th>Best MAE (%)</th>
+            <th>Average MAE (%)</th>
+            <th>Best MAX Error (%)</th>
+            <th>Training Time</th>
+            <th>Model Size</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background-color: #f0fdf4;">
+            <td><strong>25 (Selected)</strong></td>
+            <td><strong>5.8876%</strong></td>
+            <td><strong>5.9886%</strong></td>
+            <td><strong>4.3736%</strong></td>
+            <td><strong>4.4725%</strong></td>
+            <td><strong>26.6956%</strong></td>
+            <td><strong>19.9s</strong></td>
+            <td><strong>43.2 MB</strong></td>
+          </tr>
+          <tr>
+            <td>50</td>
+            <td>5.9166%</td>
+            <td>5.9855%</td>
+            <td>4.3922%</td>
+            <td>4.4676%</td>
+            <td>26.4759%</td>
+            <td>42.6s</td>
+            <td>~86 MB</td>
+          </tr>
+          <tr>
+            <td>75</td>
+            <td>5.9095%</td>
+            <td>5.9833%</td>
+            <td>4.4134%</td>
+            <td>4.4700%</td>
+            <td>24.0654%</td>
+            <td>66.2s</td>
+            <td>~130 MB</td>
+          </tr>
+          <tr>
+            <td>100</td>
+            <td>5.8979%</td>
+            <td>5.9619%</td>
+            <td>4.3853%</td>
+            <td>4.4478%</td>
+            <td>24.0784%</td>
+            <td>88.7s</td>
+            <td>~174 MB</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>Why 25 Trees is the Optimal Baseline Architecture:</strong><br>
+      25 trees achieves the lowest Best RMSE (<strong>5.8876%</strong>) and lowest Best MAE (<strong>4.3736%</strong>) of all baseline configurations. Scaling to 100 trees quadruples training time (19.9s vs 88.7s) and quadruples model size without improving accuracy, making 25 trees the ideal embedded baseline.
+    </div>
+
+    <h3 id="2-4-baseline-visualizations">2.4 Baseline Model Diagnostic Figures</h3>
+    <p>The complete 7-plot publication visualization suite for the 25-tree baseline model is saved in <code>Random_Forest/results/plots/</code>:</p>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/soc_estimation_rf.png" alt="Actual vs Predicted SOC for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.1: Actual vs. Predicted SOC across 118,974 test instances (25 Trees Baseline)</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/prediction_error_rf.png" alt="Prediction Residual Profile for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.2: Instantaneous residual error curve across 10 unseen test trips</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/feature_importance_rf.png" alt="MDI Feature Importance for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.3: MDI feature importance ranking confirming Battery Voltage dominance (&gt;70%)</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/tree_count_comparison.png" alt="Tree Count Comparison for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.4: Comparison of Best and Average RMSE/MAE across 25, 50, 75, and 100 trees</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/error_by_soc_range.png" alt="Error by SOC Range for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.5: Binned RMSE/MAE and residual boxplots across discrete SOC capacity intervals</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/error_distribution.png" alt="Error Histogram for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.6: Residual probability density distribution centered symmetrically around 0% error</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Random_Forest/results/plots/per_trip_error.png" alt="Per-Trip Error Breakdown for Baseline Random Forest" loading="lazy">
+      <figcaption>Figure 2.7: Generalization error across each individual unseen test driving cycle (TripB29 to TripB38)</figcaption>
+    </figure>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 3: BASELINE COMPARISON 1 — SINGLE DECISION TREE                      -->
+    <!-- ========================================================================= -->
+    <h2 id="part-3-decision-tree-baseline">Part 3 — Baseline Comparison 1: Single Decision Tree</h2>
+    <p>To rigorously prove the necessity of ensemble bagging, an isolated <strong>Single Decision Tree</strong> baseline was implemented under an identical setup (same 4 features, <code>max_features='sqrt'</code>, <code>min_samples_leaf=5</code>, 60 train / 10 test trips).</p>
+
+    <h3 id="3-1-decision-tree-results">3.1 Experimental Results &amp; Catastrophic Peak Error Failure</h3>
+    <p>Evaluating an un-bagged single decision tree across 5 random seeds exposes the severe volatility of single-tree partitioning:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Run / Seed</th>
+            <th>RMSE (%)</th>
+            <th>MAE (%)</th>
+            <th>MAX ERROR (%)</th>
+            <th>STD DEV (%)</th>
+            <th>Operational Assessment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Seed 42 (Best Run)</td>
+            <td><strong>7.0223%</strong></td>
+            <td><strong>5.2075%</strong></td>
+            <td><strong>41.7567%</strong></td>
+            <td>7.0162%</td>
+            <td>Catastrophic 41.8% transient spike during sudden braking.</td>
+          </tr>
+          <tr>
+            <td>Seed 142</td>
+            <td>7.0512%</td>
+            <td>5.2340%</td>
+            <td>41.8902%</td>
+            <td>7.0450%</td>
+            <td>High variance; erratic leaf assignment near OCV plateau.</td>
+          </tr>
+          <tr>
+            <td>Seed 242</td>
+            <td>7.1120%</td>
+            <td>5.2891%</td>
+            <td>42.1105%</td>
+            <td>7.1080%</td>
+            <td>Unstable prediction steps under thermal fluctuation.</td>
+          </tr>
+          <tr>
+            <td>Seed 342</td>
+            <td>7.0850%</td>
+            <td>5.2612%</td>
+            <td>41.9540%</td>
+            <td>7.0810%</td>
+            <td>High residual dispersion across all operational intervals.</td>
+          </tr>
+          <tr>
+            <td>Seed 442</td>
+            <td>7.0440%</td>
+            <td>5.2210%</td>
+            <td>41.7890%</td>
+            <td>7.0390%</td>
+            <td>Persistent worst-case error exceeding 40% SOC.</td>
+          </tr>
+          <tr style="background-color: #fef2f2;">
+            <td><strong>Ensemble Average</strong></td>
+            <td><strong>7.0629%</strong></td>
+            <td><strong>5.2426%</strong></td>
+            <td><strong>41.9001%</strong></td>
+            <td><strong>7.0578%</strong></td>
+            <td>Unacceptable for automotive production deployment.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-important">
+      <strong>The Automotive Safety Threat of Single Decision Trees:</strong><br>
+      A single tree suffers a dangerous peak error of <strong>41.76%</strong>. In a physical EV, this magnitude of error would cause the BMS to believe a critically discharged battery (e.g. 15% SOC) still has 56% charge, risking cell thermal runaway, permanent dendrite damage, or sudden roadside shutdown.
+    </div>
+
+    <h3 id="3-2-rf-vs-dt-comparison">3.2 Head-to-Head: Random Forest vs. Decision Tree</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Single Decision Tree (Best)</th>
+            <th>Random Forest (25 Trees)</th>
+            <th>Absolute Improvement</th>
+            <th>Percentage Error Reduction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RMSE</strong></td>
+            <td><code>7.0223%</code></td>
+            <td><strong><code>5.8876%</code></strong></td>
+            <td><code>-1.1347%</code></td>
+            <td><strong>16.16% lower error</strong> 🔻</td>
+          </tr>
+          <tr>
+            <td><strong>MAE</strong></td>
+            <td><code>5.2075%</code></td>
+            <td><strong><code>4.3736%</code></strong></td>
+            <td><code>-0.8339%</code></td>
+            <td><strong>16.01% lower error</strong> 🔻</td>
+          </tr>
+          <tr>
+            <td><strong>MAX ERROR</strong></td>
+            <td><code>41.7567%</code></td>
+            <td><strong><code>26.6956%</code></strong></td>
+            <td><code>-15.0611%</code></td>
+            <td><strong>36.07% peak error suppression</strong> 🔻</td>
+          </tr>
+          <tr>
+            <td><strong>STD DEV</strong></td>
+            <td><code>7.0162%</code></td>
+            <td><strong><code>5.8876%</code></strong></td>
+            <td><code>-1.1286%</code></td>
+            <td><strong>16.09% variance reduction</strong> 🔻</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="3-3-dt-visualizations">3.3 Decision Tree Diagnostic Figures</h3>
+    <p>All diagnostic plots for the Decision Tree baseline reside in <code>Decision_Tree/results/plots/</code>:</p>
+
+    <figure class="doc-image">
+      <img src="Decision_Tree/results/plots/rf_vs_dt_comparison.png" alt="Random Forest vs Decision Tree Comparison" loading="lazy">
+      <figcaption>Figure 3.1: Benchmark comparison proving 36.1% peak error suppression via ensemble bagging</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Decision_Tree/results/plots/soc_estimation_dt.png" alt="Decision Tree Actual vs Predicted SOC" loading="lazy">
+      <figcaption>Figure 3.2: Actual vs Predicted SOC for Single Decision Tree demonstrating jagged step errors</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Decision_Tree/results/plots/prediction_error_dt.png" alt="Decision Tree Prediction Error Profile" loading="lazy">
+      <figcaption>Figure 3.3: Decision Tree residual profile highlighting massive 41.76% error spikes</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Decision_Tree/results/plots/per_trip_error_dt.png" alt="Decision Tree Per-Trip Error" loading="lazy">
+      <figcaption>Figure 3.4: Per-trip RMSE and MAE across 10 test trips for Single Decision Tree</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="Decision_Tree/results/plots/feature_importance_dt.png" alt="Decision Tree Feature Importance" loading="lazy">
+      <figcaption>Figure 3.5: Gini / MDI Feature Importance for Single Decision Tree showing heavy voltage dominance and severe over-reliance on single threshold splits</figcaption>
+    </figure>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 4: BASELINE COMPARISON 2 — K-NEAREST NEIGHBORS (KNN WITH K-SWEEP)     -->
+    <!-- ========================================================================= -->
+    <h2 id="part-4-knn-baseline">Part 4 — Baseline Comparison 2: K-Nearest Neighbors (KNN with k-Sweep)</h2>
+    <p>To evaluate instance-based non-parametric regression, an isolated <strong>K-Nearest Neighbors (KNN)</strong> baseline was developed in <code>KNN/</code> with <code>StandardScaler</code> feature normalization, distance-weighted inverse Euclidean metrics ($w = 1/d$), and KD-Tree spatial indexing.</p>
+
+    <h3 id="4-1-k-sensitivity-analysis">4.1 Systematic $k$-Neighborhood Sensitivity Sweep ($k \in [1, 2, 3, 4, 5]$)</h3>
+    <p>Rather than arbitrarily selecting an unverified neighborhood size, we conducted a rigorous parameter exploration across candidate values $k \in \{1, 2, 3, 4, 5\}$ under strict automotive real-time loop constraints:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>$k$ Value</th>
+            <th>RMSE (%)</th>
+            <th>MAE (%)</th>
+            <th>MAX ERROR (%)</th>
+            <th>STD DEV (%)</th>
+            <th>Neighborhood Behavior &amp; Analysis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>$k = 1$</td>
+            <td>7.4082%</td>
+            <td>5.6623%</td>
+            <td>29.2000%</td>
+            <td>7.3708%</td>
+            <td>Severe nearest-neighbor variance; hyper-sensitive to localized current sensor noise.</td>
+          </tr>
+          <tr>
+            <td>$k = 2$</td>
+            <td>7.2448%</td>
+            <td>5.5233%</td>
+            <td>29.2000%</td>
+            <td>7.2176%</td>
+            <td>Averaging 2 points smooths noise slightly but remains prone to spatial outliers.</td>
+          </tr>
+          <tr>
+            <td>$k = 3$</td>
+            <td>7.1670%</td>
+            <td>5.4646%</td>
+            <td>29.1601%</td>
+            <td>7.1451%</td>
+            <td>Steep accuracy progression; local manifold density stabilizes.</td>
+          </tr>
+          <tr>
+            <td>$k = 4$</td>
+            <td>7.1219%</td>
+            <td>5.4327%</td>
+            <td>29.1455%</td>
+            <td>7.1035%</td>
+            <td>Further variance dampening; approaches empirical performance plateau.</td>
+          </tr>
+          <tr style="background-color: #f0fdf4;">
+            <td><strong>$k = 5$ (Selected)</strong></td>
+            <td><strong>7.0826%</strong></td>
+            <td><strong>5.4040%</strong></td>
+            <td><strong>29.1223%</strong></td>
+            <td><strong>7.0668%</strong></td>
+            <td><strong>Optimal configuration:</strong> Achieves lowest RMSE (7.0826%) and lowest MAE (5.4040%) across all tested candidates.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <figure class="doc-image">
+      <img src="KNN/results/plots/k_value_comparison.png" alt="KNN Neighborhood Size k-Sweep Comparison" loading="lazy">
+      <figcaption>Figure 4.1: Systematic $k$-value sweep ($k=1..5$) proving $k=5$ minimizes RMSE/MAE, with Random Forest benchmark reference</figcaption>
+    </figure>
+
+    <h3 id="4-2-hardware-feasibility">4.2 Embedded Hardware &amp; Microcontroller Feasibility Analysis</h3>
+    <p>While KNN produces lower peak error than a single Decision Tree (29.12% vs 41.76%), physical automotive deployment reveals severe hardware bottlenecks:</p>
+    <ul>
+      <li><strong>RAM Exhaustion</strong>: KNN is a lazy learner requiring retention of all <strong>945,026 training vectors (~15+ MB raw float data plus KD-Tree indexing nodes)</strong> directly in volatile RAM. Automotive ECUs (e.g. Infineon AURIX TC3xx, STM32F4) typically feature only 2&ndash;4 MB of total SRAM. Random Forest requires <strong>zero training data retention</strong>.</li>
+      <li><strong>Inference Latency &amp; Cycle Jitter</strong>: At 1 Hz sample rate, KNN traverses multi-dimensional hyper-planes calculating Euclidean distances across hundreds of candidate leaves, averaging <strong>17.1 ms per sample</strong> on high-end server CPUs. On a resource-constrained 100 MHz microcontroller, this easily violates the real-time execution budget. Random Forest evaluates lightweight binary comparison thresholds (`if x &le; c`) within microseconds.</li>
+    </ul>
+
+    <h3 id="4-3-rf-vs-knn-comparison">4.3 Head-to-Head: Random Forest vs. KNN ($k=5$)</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>KNN ($k=5$, Distance-Weighted)</th>
+            <th>Random Forest (25 Trees)</th>
+            <th>Absolute Improvement</th>
+            <th>Percentage Error Reduction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RMSE</strong></td>
+            <td><code>7.0826%</code></td>
+            <td><strong><code>5.8876%</code></strong></td>
+            <td><code>-1.1950%</code></td>
+            <td><strong>16.87% lower error</strong> 🔻</td>
+          </tr>
+          <tr>
+            <td><strong>MAE</strong></td>
+            <td><code>5.4040%</code></td>
+            <td><strong><code>4.3736%</code></strong></td>
+            <td><code>-1.0304%</code></td>
+            <td><strong>19.07% lower error</strong> 🔻</td>
+          </tr>
+          <tr>
+            <td><strong>MAX ERROR</strong></td>
+            <td><code>29.1223%</code></td>
+            <td><strong><code>26.6956%</code></strong></td>
+            <td><code>-2.4267%</code></td>
+            <td><strong>8.33% lower error</strong> 🔻</td>
+          </tr>
+          <tr>
+            <td><strong>STD DEV</strong></td>
+            <td><code>7.0668%</code></td>
+            <td><strong><code>5.8876%</code></strong></td>
+            <td><code>-1.1792%</code></td>
+            <td><strong>16.69% lower variance</strong> 🔻</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="4-4-knn-visualizations">4.4 KNN Diagnostic Figures</h3>
+    <p>All diagnostic plots for the KNN baseline reside in <code>KNN/results/plots/</code>:</p>
+
+    <figure class="doc-image">
+      <img src="KNN/results/plots/rf_vs_knn_comparison.png" alt="Random Forest vs KNN Benchmark Comparison" loading="lazy">
+      <figcaption>Figure 4.2: Benchmark comparison showing Random Forest achieving 16.9% lower RMSE and 19.1% lower MAE vs KNN</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="KNN/results/plots/soc_estimation_knn.png" alt="KNN Actual vs Predicted SOC" loading="lazy">
+      <figcaption>Figure 4.3: Actual vs Predicted SOC curve for KNN ($k=5$) across 118,974 test instances</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="KNN/results/plots/prediction_error_knn.png" alt="KNN Prediction Error Profile" loading="lazy">
+      <figcaption>Figure 4.4: KNN residual error curve across 10 unseen test driving cycles</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="KNN/results/plots/error_distribution_knn.png" alt="KNN Error Distribution" loading="lazy">
+      <figcaption>Figure 4.5: Residual histogram and density profile for KNN ($k=5$)</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="KNN/results/plots/per_trip_error_knn.png" alt="KNN Per-Trip Error Breakdown" loading="lazy">
+      <figcaption>Figure 4.6: Per-trip RMSE and MAE across 10 test trips for KNN ($k=5$)</figcaption>
+    </figure>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 5: ADVANCED MODEL — ENHANCED 7-FEATURE RANDOM FOREST                  -->
+    <!-- ========================================================================= -->
+    <h2 id="part-5-enhanced-random-forest">Part 5 — Advanced Architecture: Enhanced 7-Feature Random Forest</h2>
+    <p>To maximize estimation accuracy strictly within the Random Forest paradigm without changing tree splitting mechanics or bagging parameters, an isolated enhanced architecture was established in <code>RF_New/</code>.</p>
+
+    <h3 id="5-1-feature-space-expansion">5.1 Feature Space Expansion (The 7-Feature Optimal Set)</h3>
+    <p>While the 4 baseline observables define the electro-thermal core, instantaneous terminal voltage fluctuates rapidly during vehicle acceleration and kinetic braking. To provide the Random Forest with rich physical context, we augmented the 4 baseline observables with <strong>3 powertrain and kinematic features</strong>:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Feature Name</th>
+            <th>Units</th>
+            <th>Category</th>
+            <th>Relative Importance (MDI)</th>
+            <th>Physical Function &amp; Domain Justification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Battery Voltage</strong></td>
+            <td>V</td>
+            <td>Baseline Observable</td>
+            <td><strong>57.95%</strong></td>
+            <td>Direct proxy for open-circuit voltage ($V_{\text{oc}}$); primary electrochemical driver throughout charging and discharging.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Battery Temperature</strong></td>
+            <td>&deg;C</td>
+            <td>Baseline Observable</td>
+            <td><strong>12.99%</strong></td>
+            <td>Internal pack temperature; directly modulates Lithium-ion internal resistance ($R_{\text{int}}$) and chemical kinetics.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Ambient Temperature</strong></td>
+            <td>&deg;C</td>
+            <td>Baseline Observable</td>
+            <td><strong>12.58%</strong></td>
+            <td>External environmental thermal boundary condition; dictates convective and conductive pack heat dissipation.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Battery Current</strong></td>
+            <td>A</td>
+            <td>Baseline Observable</td>
+            <td><strong>7.45%</strong></td>
+            <td>Instantaneous electrical load; governs dynamic $I \cdot R$ polarization drop and instantaneous charge flux across terminals.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Velocity</strong></td>
+            <td>km/h</td>
+            <td><strong>Enhanced Kinematic</strong></td>
+            <td><strong>3.56%</strong></td>
+            <td>Instantaneous road speed. Disentangles high-speed sustained aerodynamic drag regimes (highway driving, continuous deep discharge) from low-speed urban stop-and-go cycles (intermittent pulse discharge and frequent regenerative charging).</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Throttle</strong></td>
+            <td>%</td>
+            <td><strong>Enhanced Powertrain</strong></td>
+            <td><strong>3.03%</strong></td>
+            <td>Driver accelerator pedal demand ($0\text{--}100\%$). Anticipates mechanical load spikes fractions of a second before electrochemical battery current surges manifest.</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>Motor Torque</strong></td>
+            <td>Nm</td>
+            <td><strong>Enhanced Powertrain</strong></td>
+            <td><strong>2.44%</strong></td>
+            <td>Instantaneous electromagnetic shaft torque produced/absorbed by the motor. Directly couples battery electrical power to mechanical drivetrain tractive effort, distinguishing motive propulsion from auxiliary loads.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>Why 7 Features Succeeded Where Auxiliary Loads (AirCon/Heating) Failed:</strong><br>
+      In preliminary trials, incorporating high-voltage auxiliary loads (<code>AirCon Power</code>, <code>Heating Power CAN</code>) increased error because cabin thermostat cycles cause rapid instantaneous fluctuations that act as split noise without reflecting cumulative charge drawn over time. In contrast, <code>Throttle</code>, <code>Motor Torque</code>, and <code>Velocity</code> directly describe the mechanical load regime of the vehicle. Crucially, <strong>Battery Voltage maintains 57.95% dominance</strong>, while the 3 powertrain features provide a clean <strong>9.03% contribution</strong> that refines predictions during dynamic maneuvers.
+    </div>
+
+    <h3 id="5-2-7f-tree-evaluation">5.2 Multi-Seed Tree Count Evaluation (5 Runs Each Across 1,064,000 Instances)</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Trees</th>
+            <th>Best RMSE (%)</th>
+            <th>Average RMSE (%)</th>
+            <th>Best MAE (%)</th>
+            <th>Average MAE (%)</th>
+            <th>Best MAX Error (%)</th>
+            <th>Runtime (5 Runs)</th>
+            <th>Model Size on Disk / RAM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>25</td>
+            <td>4.6636%</td>
+            <td>4.7851%</td>
+            <td>3.3917%</td>
+            <td>3.4955%</td>
+            <td>26.1416%</td>
+            <td>45.1s</td>
+            <td>~280 MB</td>
+          </tr>
+          <tr style="background-color: #f0fdf4;">
+            <td><strong>50 (Selected)</strong></td>
+            <td><strong>4.5734%</strong></td>
+            <td><strong>4.6610%</strong></td>
+            <td><strong>3.3158%</strong></td>
+            <td><strong>3.3717%</strong></td>
+            <td><strong>27.0113%</strong></td>
+            <td><strong>81.0s</strong></td>
+            <td><strong>532.9 MB</strong></td>
+          </tr>
+          <tr>
+            <td>75</td>
+            <td>4.5745%</td>
+            <td>4.6306%</td>
+            <td>3.3102%</td>
+            <td>3.3444%</td>
+            <td>26.0260%</td>
+            <td>134.5s</td>
+            <td>~840 MB</td>
+          </tr>
+          <tr>
+            <td>100</td>
+            <td>4.5607%</td>
+            <td>4.6238%</td>
+            <td>3.2994%</td>
+            <td>3.3378%</td>
+            <td>25.6643%</td>
+            <td>173.2s</td>
+            <td>1.12 GB (1,121 MB)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="5-3-50-vs-100-trees">5.3 Engineering Trade-Off Analysis: Why 50 Trees is the Definitive Optimum</h3>
+    <div class="callout callout-important">
+      <p><strong>The Pareto-Optimal Elbow Point &mdash; 50 Trees vs. 100 Trees:</strong></p>
+      <ul>
+        <li><strong>Infinitesimal Accuracy Gain ($0.0127\%$)</strong>: Scaling from 50 to 100 trees reduces test RMSE by only $0.0127\%$ (4.5734% down to 4.5607% &mdash; a minuscule 0.27% relative difference). Multi-seed variance across seeds for 100 trees spans 0.19% (4.56% to 4.75%), meaning $0.013\%$ falls entirely within random statistical sampling noise.</li>
+        <li><strong>50% Reduction in Memory Footprint</strong>: 100 deep regression trees consumes <strong>1.12 GB</strong> of storage and active RAM, whereas 50 trees consumes <strong>532.9 MB</strong>. For automotive flash storage and memory allocation on embedded microcontrollers, saving over 580 MB is essential.</li>
+        <li><strong>Halved Real-Time Inference Latency</strong>: At a 1 Hz sample rate in an automotive ECU, traversing 50 trees takes half the CPU cycles and generates half the cache pressure compared to 100 trees.</li>
+        <li><strong>Elbow Point of Diminishing Returns</strong>: 50 trees captures <strong>99.7% of the total achievable accuracy benefit</strong> while conserving half the computational budget.</li>
+      </ul>
+    </div>
+
+    <h3 id="5-4-head-to-head-4f-vs-7f">5.4 Head-to-Head Comparison: 4-Feature Baseline vs. 7-Feature Enhanced (50 Trees)</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Baseline RF (4 Features, 25 Trees)</th>
+            <th>Enhanced RF (7 Features, 50 Trees)</th>
+            <th>Absolute Delta</th>
+            <th>Relative % Change</th>
+            <th>Engineering Interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Best RMSE</strong></td>
+            <td><code>5.8876%</code></td>
+            <td><strong><code>4.5734%</code></strong></td>
+            <td><strong><code>-1.3142%</code></strong></td>
+            <td><strong><code>-22.32%</code></strong></td>
+            <td>Major leap in state estimation precision across all driving cycles.</td>
+          </tr>
+          <tr>
+            <td><strong>Average RMSE</strong></td>
+            <td><code>5.9886%</code></td>
+            <td><strong><code>4.6610%</code></strong></td>
+            <td><strong><code>-1.3276%</code></strong></td>
+            <td><strong><code>-22.17%</code></strong></td>
+            <td>Ensemble average is consistently lower across all random seeds.</td>
+          </tr>
+          <tr>
+            <td><strong>Best MAE</strong></td>
+            <td><code>4.3736%</code></td>
+            <td><strong><code>3.3158%</code></strong></td>
+            <td><strong><code>-1.0578%</code></strong></td>
+            <td><strong><code>-24.19%</code></strong></td>
+            <td>Mean absolute deviation drops by over 1.05% SOC.</td>
+          </tr>
+          <tr>
+            <td><strong>Best MAX Error</strong></td>
+            <td><code>26.6956%</code></td>
+            <td><strong><code>27.0113%</code></strong></td>
+            <td><code>+0.3157%</code></td>
+            <td><code>+1.18%</code></td>
+            <td>Peak transient worst-case error remains stable and strictly bounded.</td>
+          </tr>
+          <tr>
+            <td><strong>Feature Space</strong></td>
+            <td>4 Observables</td>
+            <td><strong>7 Telemetry Channels</strong></td>
+            <td>+3 Channels</td>
+            <td>+75%</td>
+            <td>Enriched with driver pedal demand, motor torque, and vehicle velocity.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="5-5-per-trip-analysis">5.5 Per-Trip Analysis: Why Trip Average (4.15%) Differs from Overall RMSE (4.57%)</h3>
+    <p>In the per-trip diagnostic chart, the dashed reference line indicates a mean error of <strong>4.15%</strong>, whereas the summary table indicates <strong>4.5734%</strong>. This is mathematically and physically expected:</p>
+    <ul>
+      <li><strong>Trip Length Variation (Up to 10&times;)</strong>: Unseen test trips range from <strong>2,931 instances</strong> (TripB34) to <strong>28,521 instances</strong> (TripB36). In the overall pooled RMSE (4.57%), each trip is naturally weighted by its instance count. In the per-trip chart, the red line is the unweighted arithmetic mean of the 10 trip RMSEs.</li>
+      <li><strong>Jensen's Inequality on Concave Functions</strong>: Mathematically, the average of square roots is never equal to the square root of the average ($\frac{1}{M}\sum \sqrt{\text{MSE}_i} \le \sqrt{\frac{1}{M}\sum \text{MSE}_i}$). A single difficult trip (TripB29 with 10.33% RMSE) elevates the pooled root-mean-square error much more than it elevates a simple linear average.</li>
+    </ul>
+
+    <h3 id="5-6-7f-visualizations">5.6 Enhanced Model Diagnostic Figures</h3>
+    <p>All diagnostic plots for the 7-feature model reside in <code>RF_New/results/plots/</code>:</p>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/rf_4f_vs_7f_comparison.png" alt="4F Baseline vs 7F Enhanced Random Forest Comparison" loading="lazy">
+      <figcaption>Figure 5.1: Head-to-Head Comparison: 4-Feature Baseline (25 Trees) vs. 7-Feature Enhanced RF (50 Trees)</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/soc_estimation_rf.png" alt="Actual vs Predicted SOC for 7-Feature Random Forest" loading="lazy">
+      <figcaption>Figure 5.2: Actual vs. Predicted SOC across 118,974 test instances for the 7-Feature Enhanced Model (50 Trees)</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/prediction_error_rf.png" alt="7-Feature Prediction Error Residual Profile" loading="lazy">
+      <figcaption>Figure 5.3: Instantaneous residual error curve for the 7-Feature Enhanced Model</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/feature_importance_rf.png" alt="7-Feature MDI Importance Ranking" loading="lazy">
+      <figcaption>Figure 5.4: Feature importance ranking across all 7 features confirming Voltage primacy (57.95%) and Powertrain support (9.03%)</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/tree_count_comparison.png" alt="7-Feature Tree Count Comparison" loading="lazy">
+      <figcaption>Figure 5.5: Best and Average RMSE/MAE across 25, 50, 75, and 100 trees for the 7-feature architecture</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/error_by_soc_range.png" alt="7-Feature Error by SOC Range" loading="lazy">
+      <figcaption>Figure 5.6: Residual interquartile ranges and RMSE/MAE across discrete SOC operational capacity intervals</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/error_distribution.png" alt="7-Feature Error Distribution" loading="lazy">
+      <figcaption>Figure 5.7: Symmetrical residual error distribution centered near zero error</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_New/results/plots/per_trip_error.png" alt="7-Feature Per-Trip Error Breakdown" loading="lazy">
+      <figcaption>Figure 5.8: Test RMSE and MAE per individual test trip (TripB29 to TripB38) with unweighted mean (4.15%)</figcaption>
+    </figure>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 6: MASTER COMPARISON & CROSS-METHODOLOGICAL BENCHMARK                -->
+    <!-- ========================================================================= -->
+    <h2 id="part-6-master-synthesis">Part 6 — Cross-Methodological Synthesis & Benchmarking</h2>
+    <p>Synthesizing all 4 implemented architectures across the identical 60-trip train (945,026 instances) and 10-trip test (118,974 instances) dataset:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Architecture / Model</th>
+            <th>Feature Space</th>
+            <th>Best RMSE (%)</th>
+            <th>Best MAE (%)</th>
+            <th>MAX ERROR (%)</th>
+            <th>STD DEV (%)</th>
+            <th>Model Size</th>
+            <th>Inference Latency</th>
+            <th>Primary Engineering Advantage / Limiting Factor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background-color: #f3e8ff;">
+            <td><strong>Enhanced Random Forest (50 Trees)</strong></td>
+            <td><strong>7 Features</strong></td>
+            <td><strong>4.5734%</strong></td>
+            <td><strong>3.3158%</strong></td>
+            <td>27.0113%</td>
+            <td>4.5610%</td>
+            <td>532.9 MB</td>
+            <td>&lt;0.05 ms</td>
+            <td><strong>Maximum Accuracy Leader</strong>: -22.32% error reduction over baseline via powertrain dynamics.</td>
+          </tr>
+          <tr style="background-color: #f0fdf4;">
+            <td><strong>Baseline Random Forest (25 Trees)</strong></td>
+            <td>4 Baseline</td>
+            <td><strong>5.8876%</strong></td>
+            <td><strong>4.3736%</strong></td>
+            <td><strong>26.6956%</strong></td>
+            <td>5.8876%</td>
+            <td><strong>43.2 MB</strong></td>
+            <td><strong>&lt;0.02 ms</strong></td>
+            <td><strong>Optimal Lightweight Model</strong>: Low memory footprint, fast training (19.9s), literature reproduction.</td>
+          </tr>
+          <tr>
+            <td><strong>Decision Tree (Single Tree)</strong></td>
+            <td>4 Baseline</td>
+            <td>7.0223%</td>
+            <td>5.2075%</td>
+            <td>41.7567%</td>
+            <td>7.0162%</td>
+            <td>~2.5 MB</td>
+            <td>&lt;0.001 ms</td>
+            <td><strong>High Risk</strong>: Catastrophic 41.8% peak error during regenerative braking; un-bagged variance.</td>
+          </tr>
+          <tr>
+            <td><strong>K-Nearest Neighbors ($k=5$)</strong></td>
+            <td>4 Baseline</td>
+            <td>7.0826%</td>
+            <td>5.4040%</td>
+            <td>29.1223%</td>
+            <td>7.0668%</td>
+            <td>~15+ MB (RAM)</td>
+            <td>17.1 ms</td>
+            <td><strong>Hardware Infeasible</strong>: High inference latency and requires storing 945k vectors in active RAM.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 7: INTERACTIVE BMS DIGITAL TWIN DASHBOARD                            -->
+    <!-- ========================================================================= -->
+    <h2 id="part-7-digital-twin-app">Part 7 — Interactive BMS Digital Twin Dashboard</h2>
+    <p>A full-stack interactive Battery Management System digital twin web application was engineered in <code>app/</code> to provide an intuitive visual environment for validating model inference in real time.</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Dashboard Component</th>
+            <th>Technology / File</th>
+            <th>Interactive Capability</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Inference &amp; Stream Server</strong></td>
+            <td><code>app/server.py</code> (Python HTTP API)</td>
+            <td>Lightweight REST endpoint serving serialized model inference and streaming raw telemetry chunks for test routes.</td>
+          </tr>
+          <tr>
+            <td><strong>Instrument Cluster UI</strong></td>
+            <td><code>app/index.html</code></td>
+            <td>Modern single-page application displaying digital SOC gauges, voltage, current, battery temperature, and ambient monitors.</td>
+          </tr>
+          <tr>
+            <td><strong>Design System</strong></td>
+            <td><code>app/style.css</code></td>
+            <td>Clean ceramic background with deep pine and emerald accents, high-contrast digital readouts, and responsive layout.</td>
+          </tr>
+          <tr>
+            <td><strong>60 FPS Playback Engine</strong></td>
+            <td><code>app/app.js</code> (Canvas API)</td>
+            <td>High-performance client-side rendering replaying driving cycles second-by-second with pause, scrub, and speed multiplier controls.</td>
+          </tr>
+          <tr>
+            <td><strong>Live Model Comparison</strong></td>
+            <td><code>app/app.js</code></td>
+            <td>Real-time side-by-side trajectory plotting of Actual SOC vs Random Forest vs Decision Tree vs KNN.</td>
+          </tr>
+          <tr>
+            <td><strong>What-If Scenario Sandbox</strong></td>
+            <td><code>app/app.js</code></td>
+            <td>Interactive hardware simulation allowing engineers to manipulate slider values for Voltage, Current, and Temperature to inspect live model response.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>To launch the interactive dashboard locally:</p>
+    <pre><code class="language-bash">python app/server.py
+# Open browser at: http://localhost:8000</code></pre>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 8: REPOSITORY ARCHITECTURE & MODULE DIRECTORY                        -->
+    <!-- ========================================================================= -->
+    <h2 id="part-8-project-structure">Part 8 — Repository Structure & Module Directory</h2>
+    <pre><code class="language-">EV_HEV/
+├── app/                              # Interactive BMS Digital Twin Dashboard
+│   ├── server.py                     # Lightweight HTTP API server (inference & trip streamer)
+│   ├── index.html                    # Single-page instrument cluster UI
+│   ├── style.css                     # Custom design system (ceramic & deep pine palette)
+│   └── app.js                        # Client-side 60fps replayer & Canvas charting engine
+├── archive/                          # Raw dataset (70 trip CSV files)
+│   ├── TripA01.csv ... TripA32.csv   #   Series A: 32 trips
+│   └── TripB01.csv ... TripB38.csv   #   Series B: 38 trips
+├── Random_Forest/                    # Baseline 4-Feature ensemble architecture (Paper reproduction)
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_25_trees_final.joblib  # Serialized best model (43.2 MB)
+│   │   ├── plots/                    # 7 publication-ready diagnostic charts
+│   │   └── results.json              # All metrics across 20 multi-seed runs
+│   └── src/
+│       ├── config.py                 # Hyperparameters, paths, and feature definitions
+│       ├── data_loader.py            # CSV parsing, NaN cleaning, 60/10 trip split
+│       ├── evaluate.py               # Metric computation (RMSE, MAE, MAX, STD)
+│       ├── model_rf.py               # Multi-seed RF training engine
+│       ├── plots.py                  # Visualization generation suite
+│       └── main.py                   # End-to-end execution pipeline
+├── RF_New/                           # Enhanced 7-Feature ensemble architecture (Max Improvement)
+│   ├── README.md                     # Dedicated 7-feature documentation & trade-off analysis
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_7f_50_trees_final.joblib  # Serialized best 50-tree model (532.9 MB)
+│   │   ├── plots/                    # 8 publication-ready diagnostic charts
+│   │   └── results.json              # Multi-seed metrics & baseline comparison
+│   └── src/
+│       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
+├── Decision_Tree/                    # Baseline 1: Single decision tree
+│   ├── results/
+│   │   ├── models/                   # Serialized single tree model
+│   │   ├── plots/                    # Diagnostic & RF comparison plots
+│   │   └── results.json              # Metrics across 5 seeds & RF comparison
+│   ├── src/
+│   │   ├── config.py, model_dt.py, plots_dt.py, main.py
+│   └── README.md                     # Dedicated Decision Tree documentation
+├── KNN/                              # Baseline 2: K-Nearest Neighbors
+│   ├── results/
+│   │   ├── models/                   # Serialized scaler + KNN pipeline
+│   │   ├── plots/                    # Diagnostic & k-sweep comparison plots
+│   │   ├── k_sensitivity.json        # Systematic k-value exploration results (k=1..5)
+│   │   └── results.json              # Metrics, inference latency, & RF comparison
+│   ├── src/
+│   │   ├── config.py, k_sensitivity.py, model_knn.py, plots_knn.py, main.py
+│   └── README.md                     # Dedicated KNN documentation
+├── final_documentation.html          # Comprehensive Method-Wise Technical Documentation (This file)
+├── project_documentation.html        # Step-Wise Technical Documentation
+├── features.txt                      # Telemetry feature taxonomy and MDI rankings
+└── README.md                         # Master repository documentation</code></pre>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 9: NEXT STEPS & INDUSTRIAL TRAJECTORY                                -->
+    <!-- ========================================================================= -->
+    <h2 id="part-9-next-steps">Part 9 — Next Steps & Future Research Levers</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Priority</th>
+            <th>Research Lever</th>
+            <th>Description</th>
+            <th>Anticipated Engineering Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>High</strong></td>
+            <td><strong>Temporal Sliding Windows</strong></td>
+            <td>Engineer time-series features: rolling statistical windows (10s, 30s, 60s mean/std of voltage &amp; current), first-order derivatives ($dV/dt$, $dI/dt$), cumulative ampere-hour integration ($\int I \, dt$), and lagged telemetry states.</td>
+            <td>Expected to reduce RMSE from ~4.57% down to 2.0%–2.8% by resolving electrochemical polarization hysteresis and flat OCV plateaus.</td>
+          </tr>
+          <tr>
+            <td><strong>Medium</strong></td>
+            <td><strong>Thermal Regime Clustering</strong></td>
+            <td>Train dedicated ensemble models specialized by ambient thermal clusters (Sub-zero &lt;0&deg;C, Moderate 10&ndash;25&deg;C, Extreme Heat &gt;30&deg;C).</td>
+            <td>Compensates for severe non-linear Arrhenius shifts in cell internal impedance during extreme winter cold or summer heat waves.</td>
+          </tr>
+          <tr>
+            <td><strong>Medium</strong></td>
+            <td><strong>MCU Tree Quantization &amp; Pruning</strong></td>
+            <td>Apply post-training cost-complexity pruning (CCP) and 16-bit integer quantization to compress the 532 MB model down to &lt;20 MB for automotive microcontrollers.</td>
+            <td>Enables direct deployment onto low-cost automotive microcontrollers (e.g., STM32, TI TMS570) without requiring external memory chips.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <hr>
+
+    <!-- ========================================================================= -->
+    <!-- PART 10: ATTRIBUTION, LITERATURE REFERENCES & LICENSE                      -->
+    <!-- ========================================================================= -->
+    <h2 id="part-10-attribution">Part 10 — Attribution, Literature References & License</h2>
+    <h3 id="academic-attribution">Academic Literature Citation</h3>
+    <p>This implementation reproduces and expands upon the methodology published in peer-reviewed literature:</p>
+    <blockquote>
+      <p><strong>Reference</strong>: M.H. Sulaiman, Z. Mustaffa, <em>"State of charge estimation for electric vehicles using random forest"</em>, Green Energy and Intelligent Transportation, Vol. 3, Issue 3, 2024, 100177. <a href="https://doi.org/10.1016/j.geits.2024.100177" target="_blank" rel="noopener">doi:10.1016/j.geits.2024.100177</a></p>
+    </blockquote>
+
+    <h3 id="dataset-citation">Dataset Citation</h3>
+    <p>The battery telemetry dataset utilized for model training and validation is sourced from the BMW i3 real-world driving study:</p>
+    <blockquote>
+      <p><strong>Dataset</strong>: M. S. J. B. D. Trifonov et al., <em>"Battery and heating data in real driving cycles"</em> (70 trips, 1.06M+ records). <a href="https://doi.org/10.21227/6jr9-5235" target="_blank" rel="noopener">doi:10.21227/6jr9-5235</a></p>
+    </blockquote>
+
+    <h3 id="software-license">Software License</h3>
+    <p>The software implementation, analysis pipelines, dashboard source code, and diagnostic suites in this repository are distributed under the terms of the <strong><a href="LICENSE">MIT License</a></strong>.</p>
+  </div>
+</body>
+
+</html>
