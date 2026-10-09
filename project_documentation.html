@@ -2043,7 +2043,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
             <p>The core Random Forest SOC estimation pipeline is complete and matches the reference benchmarks. The
               following are potential enhancements that could further improve accuracy, robustness, or practical
               utility:</p>
-            <h3 id="high-priority">High Priority</h3>
+            <h3 id="high-priority">High Priority (Highest Direct Accuracy Levers on Random Forest)</h3>
             <div class="table-container">
               <table>
                 <thead>
@@ -2057,24 +2057,20 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                 <tbody>
                   <tr>
                     <td>1</td>
-                    <td><strong>Temporal Feature Engineering</strong></td>
-                    <td>Engineer time-series features: rolling statistical windows (10s, 30s, 60s mean/std of voltage &amp; current), first-order derivatives (dV/dt, dI/dt), cumulative ampere-hour integration (&int;I&middot;dt), and lagged telemetry states. Resolves flat Li-ion OCV plateaus and electrochemical polarization hysteresis.</td>
-                    <td><strong>High</strong>: Largest single accuracy lever; expected to reduce RMSE from ~5.89% down to 2.5%–3.5% by giving tree models temporal memory</td>
+                    <td><strong>Temporal Rolling Windows &amp; Electrochemical Derivatives</strong></td>
+                    <td>Engineer rolling statistical windows (5s, 15s, 30s mean, variance, and min-max spread of Pack Voltage, Pack Current, and Motor Torque), first-order time derivatives (dV/dt, dI/dt) capturing transient electrochemical polarization, and cumulative ampere-hour trapezoidal integration (&int;I&middot;dt). Gives the Random Forest temporal memory to differentiate identical instantaneous voltages along flat OCV plateaus without changing the tree model architecture.</td>
+                    <td><strong>High</strong>: Largest single accuracy lever; expected to reduce RMSE from ~4.57% down to 2.5%–3.2% across dynamic cycles</td>
                   </tr>
                   <tr>
                     <td>2</td>
-                    <td><strong>Hyperparameter Optimization</strong></td>
-                    <td>Run <code>RandomizedSearchCV</code> or Bayesian optimization over <code>max_features</code>,
-                      <code>min_samples_leaf</code>, <code>max_depth</code>, <code>n_estimators</code> (broader range
-                      like 10–200)
-                    </td>
-                    <td><strong>Low-Medium</strong>: Current settings are already near-optimal; marginal gains expected
-                      (0.05–0.2%)</td>
+                    <td><strong>Non-Linear SOC Boundary &amp; Transient Sample Weighting</strong></td>
+                    <td>Utilize scikit-learn's native <code>sample_weight</code> parameter inside <code>RandomForestRegressor.fit()</code> to apply non-uniform loss penalties (1.5&times; to 2.5&times; weighting) on steep, non-linear OCV boundary regimes (SOC &lt; 20% and SOC &gt; 80%) and high-current regenerative braking spikes (I &lt; -50 A). Penalizes peak errors directly during tree variance minimization without modifying model inference code.</td>
+                    <td><strong>High</strong>: Directly suppresses the 26%–27% peak MAX error spikes occurring in non-linear operational zones</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <h3 id="medium-priority">Medium Priority</h3>
+            <h3 id="medium-priority">Medium Priority (Thermal Specialization &amp; Signal Conditioning)</h3>
             <div class="table-container">
               <table>
                 <thead>
@@ -2088,20 +2084,20 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                 <tbody>
                   <tr>
                     <td>3</td>
-                    <td><strong>Baseline Comparison (Completed &mdash; Step 11)</strong></td>
-                    <td>Implemented isolated Decision Tree (1 tree) and K-Nearest Neighbors (k=5) baselines. Quantified that Random Forest achieves a 16.2% RMSE reduction vs. Decision Tree and 16.9% vs. KNN, while cutting worst-case peak error by 36.1%. Included k-sensitivity sweep (k=1..5).</td>
-                    <td><strong>Completed</strong>: Empirically validated non-linear ensemble advantage and BMS MCU memory/latency feasibility</td>
+                    <td><strong>Temperature-Regime Stratified Clustering (Arrhenius Specialization)</strong></td>
+                    <td>Partition training fleet data across ambient temperature regimes (Cold &lt;10&deg;C, Nominal 10&ndash;25&deg;C, Elevated &gt;25&deg;C) with dedicated Random Forest estimators to isolate Arrhenius non-linear shifts in electrolyte conductivity, internal resistance (R<sub>0</sub>), and charge-transfer kinetics.</td>
+                    <td><strong>Medium</strong>: Substantially lowers estimation variance and eliminates seasonal drift during extreme cold-weather driving</td>
                   </tr>
                   <tr>
                     <td>4</td>
-                    <td><strong>Temperature-Regime Specialization</strong></td>
-                    <td>Train specialized models or thermal clustering across ambient regimes (cold &lt;10&deg;C, mild 10–25&deg;C, hot &gt;25&deg;C) to account for Arrhenius non-linearities in Li-ion internal resistance and electrochemical kinetics.</td>
-                    <td><strong>Medium</strong>: Significantly lowers estimation variance during extreme seasonal driving conditions</td>
+                    <td><strong>Dynamic Output Post-Filtering (1D Kalman Filter / Exponential Smoothing)</strong></td>
+                    <td>Couple the raw Random Forest output with a lightweight 1D Extended Kalman Filter (EKF) or Exponential Moving Average (EMA) time-series smoother. Physical battery cells cannot change state instantaneously; filtering suppresses high-frequency decision tree step jitter and enforces physical charge monotonicity during continuous discharge.</td>
+                    <td><strong>Medium</strong>: Smooths step discontinuities, reducing RMSE by ~0.2%&ndash;0.4% on continuous trips while eliminating instrument cluster jitter</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <h3 id="low-priority">Low Priority</h3>
+            <h3 id="low-priority">Low Priority (Hyperparameter &amp; Telemetry Calibration)</h3>
             <div class="table-container">
               <table>
                 <thead>
@@ -2115,15 +2111,15 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                 <tbody>
                   <tr>
                     <td>5</td>
-                    <td><strong>Interactive BMS Digital Twin Dashboard (Completed)</strong></td>
-                    <td>Constructed full-stack single-page web dashboard (<code>app/</code>) featuring 60 fps drive cycle playback across 10 unseen trips (TripB29–TripB38), live side-by-side inference (RF vs. DT vs. KNN), and interactive What-If hardware sandbox.</td>
-                    <td><strong>Completed</strong>: Interactive instrument cluster demo operating at http://localhost:8000</td>
+                    <td><strong>Bayesian Hyperparameter Optimization for 7-Feature Space</strong></td>
+                    <td>Execute Bayesian optimization (via Optuna or scikit-optimize) over continuous fractional <code>max_features</code> ratios (0.4&ndash;0.8), <code>min_samples_split</code> (2&ndash;10), and <code>min_samples_leaf</code> (2&ndash;8) specifically tuned for the expanded 7-feature correlation structure.</td>
+                    <td><strong>Low-Medium</strong>: Expected marginal 0.05%&ndash;0.15% RMSE reduction through optimal leaf granularity tuning</td>
                   </tr>
                   <tr>
                     <td>6</td>
-                    <td><strong>Ensemble Stacking &amp; Gradient Boosting</strong></td>
-                    <td>Benchmark sequential gradient boosting (XGBoost / LightGBM) or stack Random Forest with a secondary meta-regressor to target transient peak errors.</td>
-                    <td><strong>Low-Medium</strong>: May squeeze out 0.1–0.3% RMSE reduction but introduces additional computational overhead</td>
+                    <td><strong>Rest-Phase OCV Recalibration &amp; Transition Cleaning</strong></td>
+                    <td>Implement automated zero-current rest detection (I = 0 A for t &gt; 15 min) in driving telemetry to anchor steady-state open-circuit voltage lookups and filter initial startup sensor noise from the training dataset.</td>
+                    <td><strong>Low-Medium</strong>: Eliminates initial-condition estimation offsets at the start of driving cycles</td>
                   </tr>
                 </tbody>
               </table>

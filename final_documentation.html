@@ -1524,15 +1524,27 @@
         <tbody>
           <tr>
             <td><strong>High</strong></td>
-            <td><strong>Temporal Sliding Windows</strong></td>
-            <td>Engineer time-series features: rolling statistical windows (10s, 30s, 60s mean/std of voltage &amp; current), first-order derivatives ($dV/dt$, $dI/dt$), cumulative ampere-hour integration ($\int I \, dt$), and lagged telemetry states.</td>
-            <td>Expected to reduce RMSE from ~4.57% down to 2.0%–2.8% by resolving electrochemical polarization hysteresis and flat OCV plateaus.</td>
+            <td><strong>Temporal Sliding Windows &amp; Derivatives</strong></td>
+            <td>Engineer time-series features: rolling statistical windows (5s, 15s, 30s mean/std of voltage, current, and torque), first-order derivatives ($dV/dt$, $dI/dt$), and cumulative ampere-hour integration ($\int I \, dt$).</td>
+            <td>Expected to reduce RMSE from ~4.57% down to 2.5%–3.2% by resolving electrochemical polarization hysteresis and flat OCV plateaus without altering tree architecture.</td>
+          </tr>
+          <tr>
+            <td><strong>High</strong></td>
+            <td><strong>Non-Linear SOC Boundary &amp; Transient Sample Weighting</strong></td>
+            <td>Apply non-uniform sample weights (1.5&times; to 2.5&times;) inside <code>sample_weight</code> during Random Forest fitting for steep non-linear regimes (SOC &lt; 20%, SOC &gt; 80%) and high regenerative braking currents (I &lt; -50 A).</td>
+            <td>Directly suppresses peak 26%–27% error spikes in non-linear operational zones while preserving the baseline tree structure.</td>
           </tr>
           <tr>
             <td><strong>Medium</strong></td>
             <td><strong>Thermal Regime Clustering</strong></td>
             <td>Train dedicated ensemble models specialized by ambient thermal clusters (Sub-zero &lt;0&deg;C, Moderate 10&ndash;25&deg;C, Extreme Heat &gt;30&deg;C).</td>
             <td>Compensates for severe non-linear Arrhenius shifts in cell internal impedance during extreme winter cold or summer heat waves.</td>
+          </tr>
+          <tr>
+            <td><strong>Medium</strong></td>
+            <td><strong>Dynamic State Post-Filtering (1D Kalman / EMA)</strong></td>
+            <td>Couple the raw Random Forest output with a lightweight 1D Extended Kalman Filter or Exponential Moving Average time-series smoother.</td>
+            <td>Eliminates high-frequency tree decision jitter and enforces monotonic charge-depletion physical constraints, reducing RMSE by ~0.2%–0.4%.</td>
           </tr>
           <tr>
             <td><strong>Medium</strong></td>
