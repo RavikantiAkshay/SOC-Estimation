@@ -40,6 +40,8 @@ Decision_Tree/results/models/*.joblib
 !Decision_Tree/results/models/.gitkeep
 KNN/results/models/*.joblib
 !KNN/results/models/.gitkeep
+RF_New/results/models/*.joblib
+!RF_New/results/models/.gitkeep
 
 # Testing and coverage
 .pytest_cache/
