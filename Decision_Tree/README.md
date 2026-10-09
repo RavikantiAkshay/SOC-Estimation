@@ -6,7 +6,7 @@ This directory contains the independent, modular implementation of the **Decisio
 
 ## 🎯 Baseline Objectives
 
-1. **Single-Tree Benchmark**: Quantify the performance of a single decision tree ($N_{\text{estimators}} = 1$) to prove the statistical necessity of Random Forest's bootstrap aggregating (bagging) and feature sub-sampling.
+1. **Single-Tree Benchmark**: Quantify the performance of a single decision tree (N<sub>estimators</sub> = 1) to prove the statistical necessity of Random Forest's bootstrap aggregating (bagging) and feature sub-sampling.
 2. **Variance & Overfitting Analysis**: Evaluate how a single high-variance tree behaves compared to an ensemble when exposed to noisy, unseen dynamic driving cycles.
 3. **Worst-Case Error Bound**: Measure peak estimation error to evaluate BMS safety limits.
 

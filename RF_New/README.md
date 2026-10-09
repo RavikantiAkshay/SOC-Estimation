@@ -24,12 +24,12 @@ All 7 features are extracted from universal sensor channels available across 100
 
 | # | Feature Name | Units | Category | Relative Importance (MDI) | Physical Function |
 |:---:|:---|:---:|:---:|:---:|:---|
-| 1 | **Battery Voltage** | V | Baseline Observable | **57.95%** | Direct open-circuit voltage ($V_{\text{oc}}$) proxy; primary electrochemical driver. |
-| 2 | **Battery Temperature** | °C | Baseline Observable | **12.99%** | Internal pack temperature governing cell resistance ($R_{\text{int}}$) and chemical kinetics. |
+| 1 | **Battery Voltage** | V | Baseline Observable | **57.95%** | Direct open-circuit voltage (V<sub>oc</sub>) proxy; primary electrochemical driver. |
+| 2 | **Battery Temperature** | °C | Baseline Observable | **12.99%** | Internal pack temperature governing cell resistance (R<sub>int</sub>) and chemical kinetics. |
 | 3 | **Ambient Temperature** | °C | Baseline Observable | **12.58%** | Environmental thermal boundary condition governing passive pack heat transfer. |
-| 4 | **Battery Current** | A | Baseline Observable | **7.45%** | Instantaneous load, dynamic $I \cdot R$ polarization drop, and charge flux. |
+| 4 | **Battery Current** | A | Baseline Observable | **7.45%** | Instantaneous load, dynamic I &times; R polarization drop, and charge flux. |
 | 5 | **Velocity** | km/h | **New Powertrain** | **3.56%** | Dynamic operational speed regime; distinguishes highway vs stop-and-go energy demand. |
-| 6 | **Throttle** | % | **New Powertrain** | **3.03%** | Driver pedal demand ($0\text{--}100\%$), anticipating electrical load spikes before current surges. |
+| 6 | **Throttle** | % | **New Powertrain** | **3.03%** | Driver pedal demand (0–100%), anticipating electrical load spikes before current surges. |
 | 7 | **Motor Torque** | Nm | **New Powertrain** | **2.44%** | Instantaneous mechanical shaft work produced/absorbed by the electric motor. |
 
 > **Combined Contribution of New Features**: The 3 newly added powertrain variables account for **`9.03%` of total predictive importance**, providing the necessary mechanical load context without diluting the primary electrochemical voltage signal.
@@ -52,8 +52,8 @@ All 7 features are extracted from universal sensor channels available across 100
 While 100 trees yielded the absolute mathematical minimum RMSE (**4.5607%** vs **4.5734%**), **50 trees is the definitive Pareto-optimal engineering choice**:
 
 1. **Infinitesimal Accuracy Difference (0.013%)**:
-   - $\Delta \text{RMSE} = 4.5607\% - 4.5734\% = \mathbf{-0.0127\%}$ (only a **0.27%** relative change).
-   - $\Delta \text{MAE} = 3.2994\% - 3.3158\% = \mathbf{-0.0164\%}$ (only a **0.49%** relative change).
+   - &Delta;RMSE = 4.5607% &minus; 4.5734% = **&minus;0.0127%** (only a **0.27%** relative change).
+   - &Delta;MAE = 3.2994% &minus; 3.3158% = **&minus;0.0164%** (only a **0.49%** relative change).
    - The multi-seed variance across runs for 100 trees spans **0.19%** (4.56% to 4.75%). A difference of 0.013% is well within random statistical noise of tree bootstrap sampling.
 
 2. **Doubled Hardware & Computational Cost**:
@@ -62,9 +62,9 @@ While 100 trees yielded the absolute mathematical minimum RMSE (**4.5607%** vs *
    - **Training Time**: Scales linearly from 81 seconds to 173 seconds.
 
 3. **The Law of Diminishing Returns (Elbow Curve)**:
-   - Moving from **4F Baseline $\rightarrow$ 7F (25 Trees)** cuts RMSE by **-1.224%** (-20.8%).
-   - Moving from **25 Trees $\rightarrow$ 50 Trees** cuts RMSE by an additional **-0.090%** (-1.5%).
-   - Moving from **50 Trees $\rightarrow$ 100 Trees** cuts RMSE by merely **-0.013%** (-0.2%).
+   - Moving from **4F Baseline &rarr; 7F (25 Trees)** cuts RMSE by **-1.224%** (-20.8%).
+   - Moving from **25 Trees &rarr; 50 Trees** cuts RMSE by an additional **-0.090%** (-1.5%).
+   - Moving from **50 Trees &rarr; 100 Trees** cuts RMSE by merely **-0.013%** (-0.2%).
    - **50 trees captures 99.7% of the total achievable accuracy benefit** while conserving half of the system's computational budget.
 
 ---

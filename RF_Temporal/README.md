@@ -20,8 +20,8 @@ All temporal rolling windows, derivatives, and Open-Circuit Voltage estimations 
 7. `Velocity [km/h]` — Vehicle kinematic state and aerodynamic drag.
 
 ### C. Temporal Micro-Dynamics (2 Features)
-8. `dV_dt [V/s]` — Instantaneous voltage rate of change ($\frac{dV}{dt}$). Captures rapid step transitions vs. steady-state relaxation.
-9. `dI_dt [A/s]` — Instantaneous current rate of change ($\frac{dI}{dt}$). Resolves dynamic polarization and $RC$ transient settling.
+8. `dV_dt [V/s]` — Instantaneous voltage rate of change (<em>dV/dt</em>). Captures rapid step transitions vs. steady-state relaxation.
+9. `dI_dt [A/s]` — Instantaneous current rate of change (<em>dI/dt</em>). Resolves dynamic polarization and RC transient settling.
 
 ### D. Local & Macro Temporal Rolling Windows (4 Features)
 10. `V_mean_15s [V]` — 15-second rolling average of pack voltage. Filters 1s throttle/regen spikes.
@@ -31,7 +31,7 @@ All temporal rolling windows, derivatives, and Open-Circuit Voltage estimations 
 14. `I_mean_60s [A]` — 60-second rolling average of current.
 
 ### E. Physics-Compensated Open-Circuit Potential (1 Feature)
-15. `V_est_ocv [V]` — Arrhenius temperature-compensated Open-Circuit Voltage estimate ($V - I \cdot R_0(T)$), decoupling internal resistance drops under high loads.
+15. `V_est_ocv [V]` — Arrhenius temperature-compensated Open-Circuit Voltage estimate (<em>V<sub>t</sub></em> &minus; (<em>I<sub>t</sub></em> &times; <em>R</em><sub>0</sub>(<em>T</em>))), decoupling internal resistance drops under high loads.
 
 ---
 
@@ -54,8 +54,8 @@ Evaluated across **118,974 test instances** spanning 10 completely unseen real-w
 | **75** | 4.0049% | 4.0421% | 3.0329% | 19.7657% |
 | **100** | 4.0078% | 4.0396% | 3.0071% | 20.5827% |
 
-* **RMSE Error Reduction vs Baseline**: **$-32.07\%$** (from $5.8876\%$ down to $3.9994\%$)
-* **Peak MAX Error Reduction vs Baseline**: **$-29.06\%$** (from $26.6956\%$ down to $18.9379\%$)
+* **RMSE Error Reduction vs Baseline**: **&minus;32.07%** (from 5.8876% down to 3.9994%)
+* **Peak MAX Error Reduction vs Baseline**: **&minus;29.06%** (from 26.6956% down to 18.9379%)
 * **Consistent 50 Trees**: Matches the 50-tree architecture selected in `RF_New`, achieving the absolute lowest RMSE, lowest MAE, and sub-19% peak error.
 
 ---

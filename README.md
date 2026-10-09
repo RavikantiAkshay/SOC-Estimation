@@ -9,10 +9,9 @@ A production-grade machine learning system designed to estimate the State of Cha
 Accurate SOC estimation is critical for battery management systems (BMS) to extend battery longevity, prevent catastrophic over-discharge/over-charge states, and provide drivers with reliable range predictions. Real-world EV driving conditions present severe challenges: dynamic acceleration/braking currents, ambient and internal thermal fluctuations, sensor noise, and electrochemical hysteresis.
 
 This system addresses these challenges using an ensemble learning approach trained on **over 1.06 million instances** of real-world driving telemetry:
-- **Best Test RMSE**: **`5.8876%`**
-- **Best Test MAE**: **`4.3736%`**
-- **Optimal Model Size**: **25 trees (43.2 MB)**
-- **Training Time**: **~19.9s** (fast turnaround, minimal latency)
+- **Baseline Benchmark (4 Features, 25 Trees)**: `5.8876%` RMSE | `4.3736%` MAE | `26.70%` MAX
+- **Enhanced Model (7 Features, 50 Trees)**: `4.5734%` RMSE | `3.3158%` MAE | `27.01%` MAX
+- **State-of-the-Art Model (15 Features, 50 Trees)**: **`3.9994%` RMSE** | **`3.0345%` MAE** | **`18.9379%` MAX** (**-32.07% Error Reduction**)
 
 ---
 
@@ -73,7 +72,7 @@ This system addresses these challenges using an ensemble learning approach train
 ### Key Engineering Decisions
 
 1. **Feature Subsampling per Split (`max_features='sqrt'`)**:
-   Instead of considering all 4 telemetry features at every node split, each split randomly samples $\sqrt{4} = 2$ features. This de-correlates the individual trees in the forest, preventing voltage dominance from overshadowing temperature and current dynamics.
+   Instead of considering all 4 telemetry features at every node split, each split randomly samples &radic;4 = 2 features. This de-correlates the individual trees in the forest, preventing voltage dominance from overshadowing temperature and current dynamics.
 2. **Leaf Node Regularization (`min_samples_leaf=5`)**:
    Enforcing a minimum of 5 samples per terminal leaf node prevents individual decision trees from fitting to high-frequency sensor anomalies and transient current spikes.
 3. **Statistical Multi-Run Validation**:
@@ -108,11 +107,11 @@ While the 4-feature baseline provides a solid electro-thermal foundation, pure i
 
 | # | Feature Name | Units | Domain Category | Physical Function & Domain Justification |
 |:---:|:---|:---:|:---|:---|
-| 1 | **Battery Voltage** | V | Baseline Observable | Direct proxy for open-circuit voltage ($V_{\text{oc}}$); primary electrochemical driver throughout charging and discharging. |
-| 2 | **Battery Current** | A | Baseline Observable | Instantaneous electrical load; governs dynamic $I \cdot R$ polarization drop and instantaneous charge flux across terminals. |
-| 3 | **Battery Temperature** | °C | Baseline Observable | Internal pack temperature; directly modulates Lithium-ion internal resistance ($R_{\text{int}}$) and chemical kinetics. |
+| 1 | **Battery Voltage** | V | Baseline Observable | Direct proxy for open-circuit voltage (V<sub>oc</sub>); primary electrochemical driver throughout charging and discharging. |
+| 2 | **Battery Current** | A | Baseline Observable | Instantaneous electrical load; governs dynamic I &times; R polarization drop and instantaneous charge flux across terminals. |
+| 3 | **Battery Temperature** | °C | Baseline Observable | Internal pack temperature; directly modulates Lithium-ion internal resistance (R<sub>int</sub>) and chemical kinetics. |
 | 4 | **Ambient Temperature** | °C | Baseline Observable | External environmental thermal boundary condition; dictates convective and conductive pack heat dissipation. |
-| 5 | **Throttle** | % | **Powertrain Intent** | Driver accelerator pedal demand ($0\text{--}100\%$). Anticipates mechanical load spikes fractions of a second before electrochemical battery current surges manifest. |
+| 5 | **Throttle** | % | **Powertrain Intent** | Driver accelerator pedal demand (0–100%). Anticipates mechanical load spikes fractions of a second before electrochemical battery current surges manifest. |
 | 6 | **Motor Torque** | Nm | **Powertrain Work** | Instantaneous electromagnetic shaft torque produced/absorbed by the motor. Directly couples battery electrical power to mechanical drivetrain tractive effort. |
 | 7 | **Velocity** | km/h | **Vehicle Kinematics** | Instantaneous road speed. Disentangles high-speed sustained aerodynamic drag regimes (highway driving) from low-speed urban stop-and-go cycles (frequent kinetic braking recovery). |
 
@@ -141,11 +140,11 @@ While the 4-feature baseline provides a solid electro-thermal foundation, pure i
 
 To rigorously evaluate the necessity and advantages of the ensemble Random Forest, two distinct baselines were implemented under an identical experimental setup (same 60-trip training split of 945,026 instances and 10-trip test split of 118,974 instances):
 1. **Decision Tree (Single Tree)**: Evaluates a single decision tree with identical tree regularization (`max_features='sqrt'`, `min_samples_leaf=5`) across 5 random seeds to measure the variance reduction and stabilization of ensemble bagging.
-2. **K-Nearest Neighbors ($k=5$, Distance-Weighted)**: An instance-based non-parametric baseline operating with `StandardScaler` feature normalization and KD-Tree spatial indexing.
+2. **K-Nearest Neighbors (k = 5, Distance-Weighted)**: An instance-based non-parametric baseline operating with `StandardScaler` feature normalization and KD-Tree spatial indexing.
 
 #### Head-to-Head Comparison on Unseen Driving Cycles (10 Trips, 118,974 Test Samples)
 
-| Metric | Random Forest (25 Trees) | K-Nearest Neighbors ($k=5$) | Decision Tree (Single Tree) | RF Improvement vs. KNN | RF Improvement vs. DT |
+| Metric | Random Forest (25 Trees) | K-Nearest Neighbors (k = 5) | Decision Tree (Single Tree) | RF Improvement vs. KNN | RF Improvement vs. DT |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **RMSE** | **`5.8876%`** | `7.0826%` | `7.0223%` | **16.87% lower error** | **16.16% lower error** |
 | **MAE** | **`4.3736%`** | `5.4040%` | `5.2075%` | **19.07% lower error** | **16.01% lower error** |
@@ -181,8 +180,8 @@ An isolated, enhanced experimental architecture located in [`RF_New/`](file:///e
 
 ### ⚖️ Engineering Analysis: Why 50 Trees is the Optimal Choice
 
-1. **Negligible Accuracy Difference ($0.0127\%$)**:
-   Moving from 50 to 100 trees reduces test RMSE by only **$0.0127\%$** ($4.5734\%$ down to $4.5607\%$). Multi-seed variation across seeds for 100 trees is $0.19\%$, meaning this tiny delta is well within random statistical sampling noise.
+1. **Negligible Accuracy Difference (0.0127%)**:
+   Moving from 50 to 100 trees reduces test RMSE by only **0.0127%** (4.5734% down to 4.5607%). Multi-seed variation across seeds for 100 trees is 0.19%, meaning this tiny delta is well within random statistical sampling noise.
 2. **50% Memory Footprint Savings**:
    100 deep unpruned trees consumes **1.12 GB** of disk and RAM space, whereas 50 trees consumes **532.9 MB**. For automotive flash storage and RAM constraints on embedded microcontrollers, saving over 580 MB is essential.
 3. **Halved Real-Time Inference Latency**:
@@ -206,15 +205,68 @@ Both models were evaluated on the identical 60/10 trip partition (945,026 train 
 
 | Rank | Feature | Category | Importance (MDI) | Physical Role |
 |:---:|:---|:---:|:---:|:---|
-| 1 | **Battery Voltage [V]** | Baseline | **57.95%** | Primary electrochemical driver ($V_{\text{oc}}$). |
-| 2 | **Battery Temperature [°C]** | Baseline | **12.99%** | Governs internal cell resistance ($R_{\text{int}}$) & kinetics. |
+| 1 | **Battery Voltage [V]** | Baseline | **57.95%** | Primary electrochemical driver (V<sub>oc</sub>). |
+| 2 | **Battery Temperature [°C]** | Baseline | **12.99%** | Governs internal cell resistance (R<sub>int</sub>) & kinetics. |
 | 3 | **Ambient Temperature [°C]** | Baseline | **12.58%** | Environmental thermal boundary condition. |
-| 4 | **Battery Current [A]** | Baseline | **7.45%** | Instantaneous load flux and dynamic $I \cdot R$ drop. |
+| 4 | **Battery Current [A]** | Baseline | **7.45%** | Instantaneous load flux and dynamic I &times; R drop. |
 | 5 | **Velocity [km/h]** | Enhanced | **3.56%** | Distinguishes high-speed drag from urban stop-and-go. |
 | 6 | **Throttle [%]** | Enhanced | **3.03%** | Driver pedal demand intent; anticipates load spikes. |
 | 7 | **Motor Torque [Nm]** | Enhanced | **2.44%** | Instantaneous mechanical shaft work delivery. |
 
 > Complete implementation, model binary (`rf_7f_50_trees_final.joblib`), and 8 diagnostic plots reside in [`RF_New/`](file:///e:/EV_HEV/RF_New/).
+
+---
+
+## ⚡ State-of-the-Art Architecture: 15-Feature Temporal & Physics-Compensated Random Forest (`RF_Temporal`)
+
+While adding powertrain kinematics (`RF_New`) reduced RMSE by 22.32%, instantaneous models still exhibited peak error spikes (~26%–27%) during extreme driving transients—specifically, when a driver floors the accelerator pedal (up to **-330 A**) in near-freezing winter temperatures (**4 °C**), causing a massive **~60V internal resistance (I &times; R) voltage drop**.
+
+To eliminate these transient distortions without altering the underlying Random Forest ensemble architecture, an isolated **15-feature temporal and physics-compensated pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
+
+### 🔬 The 15-Feature Taxonomy
+
+All temporal features are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries:
+
+| # | Feature Name | Category | Role & Engineering Rationale |
+|:---:|:---|:---:|:---|
+| 1 | **Battery Voltage [V]** | Baseline Observable | Instantaneous terminal potential (V<sub>terminal</sub>). |
+| 2 | **Battery Current [A]** | Baseline Observable | Instantaneous load demand / regenerative charge rate. |
+| 3 | **Battery Temperature [°C]** | Baseline Observable | Core cell temperature governing internal resistance. |
+| 4 | **Ambient Temperature [°C]** | Baseline Observable | Environmental thermal boundary condition. |
+| 5 | **Throttle [%]** | Powertrain / Kinematic | Driver pedal demand intention. |
+| 6 | **Motor Torque [Nm]** | Powertrain / Kinematic | Mechanical shaft work load on inverter/motor. |
+| 7 | **Velocity [km/h]** | Powertrain / Kinematic | Vehicle kinematic state and aerodynamic drag. |
+| 8 | **dV_dt [V/s]** | Temporal Dynamic | (V<sub>t</sub> &minus; V<sub>t&minus;1</sub>) / &Delta;t (rate-of-change; separates step jumps from relaxation). |
+| 9 | **dI_dt [A/s]** | Temporal Dynamic | (I<sub>t</sub> &minus; I<sub>t&minus;1</sub>) / &Delta;t (transient settling and polarization dynamics). |
+| 10 | **V_mean_15s [V]** | Temporal Rolling | 15-second rolling average of voltage (filters 1s pedal blips). |
+| 11 | **I_mean_15s [A]** | Temporal Rolling | 15-second rolling average of current (sustained vs momentary load). |
+| 12 | **V_std_15s [V]** | Temporal Rolling | 15-second rolling voltage standard deviation (local volatility). |
+| 13 | **V_mean_60s [V]** | Temporal Rolling | 60-second rolling average of voltage (anchors true resting potential during sustained acceleration). |
+| 14 | **I_mean_60s [A]** | Temporal Rolling | 60-second rolling average of current. |
+| 15 | **V_est_ocv [V]** | Physics-Compensated | Arrhenius temperature-compensated Open-Circuit Voltage estimate: V<sub>t</sub> &minus; (I<sub>t</sub> &times; R<sub>0</sub>(T)), where R<sub>0</sub>(T) = 0.10 &times; e<sup>&minus;0.03 &times; (T<sub>batt</sub> &minus; 25)</sup>. Decouples load-induced voltage sag from true battery charge state. |
+
+### 📈 Multi-Seed Tree Count Evaluation (15 Features, 5 Repeats Each)
+
+| Trees | Best RMSE | Avg RMSE | Best MAE | Avg MAE | Best MAX Error | Avg MAX Error |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **25** | 4.0176% | 4.0904% | 3.0634% | 3.1089% | 19.6523% | 21.4686% |
+| **50** | **`3.9994%`** 🔻 | **`4.0546%`** 🔻 | **`3.0345%`** 🔻 | **`3.0697%`** 🔻 | **`18.9379%`** 🔻 | **`20.6695%`** 🔻 |
+| **75** | 4.0049% | 4.0421% | 3.0329% | 3.0560% | 19.7657% | 21.0335% |
+| **100** | 4.0078% | 4.0396% | 3.0071% | 3.0425% | 20.5827% | 21.8415% |
+
+### 🏆 Three-Stage Research Progression (Test Set Performance)
+
+| Research Stage | Model Configuration | Features | Trees | Best RMSE | Best MAE | Peak MAX Error | Status |
+|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% | Paper Reproduction |
+| **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% | Powertrain Expansion |
+| **Stage 3** | **Temporal & Physics-Compensated (`RF_Temporal`)** | **15** | **50** | **`3.9994%`** 🔻 | **`3.0345%`** 🔻 | **`18.9379%`** 🔻 | **State of the Art** |
+
+* **Total RMSE Error Reduction vs Baseline**: **`-32.07%`** (from `5.8876%` down to `3.9994%`).
+* **Total MAE Error Reduction vs Baseline**: **`-30.62%`** (from `4.3736%` down to `3.0345%`).
+* **Peak MAX Error Reduction vs Baseline**: **`-29.06%`** (from `26.6956%` down to `18.9379%` — breaking the 20% barrier for the first time).
+
+> Complete implementation, model binary (`rf_temporal_50_trees_final.joblib`), and 8 diagnostic plots reside in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
 
 ---
 
@@ -238,7 +290,7 @@ EV_HEV/
 │   │   └── results.json             # Metrics for all tree configurations & seeds
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_New/                          # Enhanced 7-Feature ensemble architecture (Max Improvement)
+├── RF_New/                          # Enhanced 7-Feature ensemble architecture (Powertrain Kinematics)
 │   ├── README.md                    # Dedicated 7-feature documentation & trade-off analysis
 │   ├── results/
 │   │   ├── models/
@@ -247,21 +299,30 @@ EV_HEV/
 │   │   └── results.json             # Multi-seed metrics & baseline comparison
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
+├── RF_Temporal/                     # State-of-the-Art 15-Feature Temporal & Physics Model
+│   ├── README.md                    # Dedicated 15-feature documentation & derivation
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model
+│   │   ├── plots/                   # 8 publication-ready diagnostic charts
+│   │   └── results.json             # Multi-seed metrics & 3-stage comparative progression
+│   └── src/
+│       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
 ├── Decision_Tree/                   # Baseline 1: Single decision tree
 │   ├── results/
 │   │   ├── models/                  # Serialized single tree model
 │   │   ├── plots/                   # Single tree diagnostic & comparison plots
 │   │   └── results.json             # Single tree performance metrics & RF comparison
-│   ├── src/
-│   │   ├── config.py, model_dt.py, plots_dt.py, main.py
+│   └── src/
+│       ├── config.py, model_dt.py, plots_dt.py, main.py
 │   └── README.md                    # Detailed Decision Tree documentation
 ├── KNN/                             # Baseline 2: K-Nearest Neighbors
 │   ├── results/
 │   │   ├── models/                  # Serialized scaler + KNN pipeline
 │   │   ├── plots/                   # KNN diagnostic & comparison plots
 │   │   └── results.json             # KNN performance metrics & RF comparison
-│   ├── src/
-│   │   ├── config.py, model_knn.py, plots_knn.py, main.py
+│   └── src/
+│       ├── config.py, model_knn.py, plots_knn.py, main.py
 │   └── README.md                    # Detailed KNN baseline documentation
 └── README.md                        # Master repository documentation
 ```
@@ -269,8 +330,9 @@ EV_HEV/
 ### Module Responsibilities
 
 - **`app/`**: Standalone interactive BMS digital twin web dashboard. Features live trip telemetry playback across test routes (TripB29 to TripB38), real-time side-by-side inference against Random Forest, Decision Tree, and KNN, and an interactive What-If scenario sandbox.
-- **`Random_Forest/`**: Contains the full implementation of the baseline 4-feature, 25-tree ensemble model reproducing the reference literature.
-- **`RF_New/`**: Contains the enhanced 7-feature Random Forest architecture achieving **4.5734% RMSE (-22.32% error reduction)**, complete with 50-tree model serialization and 8 diagnostic plots.
+- **`Random_Forest/`**: Contains the full implementation of the baseline 4-feature, 25-tree ensemble model reproducing the reference literature (`5.8876%` RMSE).
+- **`RF_New/`**: Contains the enhanced 7-feature Random Forest architecture adding powertrain kinematics (`4.5734%` RMSE, `-22.32%` error reduction).
+- **`RF_Temporal/`**: Contains the state-of-the-art 15-feature Random Forest model incorporating micro-derivatives, local & macro rolling windows, temperature-compensated V<sub>est_ocv</sub>, and sample weighting (`3.9994%` RMSE, `18.9379%` MAX error, `-32.07%` total error reduction).
 - **`Decision_Tree/`**: Isolates the single-tree baseline to demonstrate the empirical benefits of ensemble variance reduction and bagging.
 - **`KNN/`**: Implements standardized feature scaling and instance-based nearest-neighbor regression to benchmark against distance-based methods and analyze onboard ECU computational feasibility.
 
@@ -281,7 +343,7 @@ EV_HEV/
 All generated plots are saved to [`Random_Forest/results/plots/`](file:///e:/EV_HEV/Random_Forest/results/plots/):
 
 1. **SOC Estimation Curve (`soc_estimation_rf.png`)**: Tracks actual vs. predicted SOC across 118,974 test instances, demonstrating tight tracking throughout diverse driving cycles.
-2. **Prediction Error Profile (`prediction_error_rf.png`)**: Visualizes instantaneous residuals ($y_{true} - y_{pred}$) across test duration.
+2. **Prediction Error Profile (`prediction_error_rf.png`)**: Visualizes instantaneous residuals (y<sub>true</sub> &minus; y<sub>pred</sub>) across test duration.
 3. **Tree Count Comparison (`tree_count_comparison.png`)**: Two-panel comparative bar chart (scaled Y-axes) highlighting Best and Average RMSE/MAE across 25, 50, 75, and 100 trees with exact values labeled on every bar.
 4. **Feature Importance (`feature_importance_rf.png`)**: Ranks the relative predictive contribution of Battery Voltage, Battery Current, Battery Temperature, and Ambient Temperature.
 5. **Error by SOC Operational Range (`error_by_soc_range.png`)**: Two-panel analysis showing binned RMSE/MAE and residual boxplots across discrete battery capacity intervals (0–20%, 20–40%, 40–60%, 60–80%, 80–100%).

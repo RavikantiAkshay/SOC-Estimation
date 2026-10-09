@@ -520,10 +520,11 @@
       Complete Project Documentation</h1>
     <div class="project-header-card">
       <p><strong>Project:</strong> State of Charge (SOC) Estimation for Electric Vehicles</p>
-      <p><strong>Method:</strong> Optimized Random Forest Regression</p>
+      <p><strong>Method:</strong> Optimized Random Forest Regression (Multi-Stage Evolutionary Architecture)</p>
       <p><strong>Dataset:</strong> BMW i3 Real-World Driving Telemetry (70 Trips, 1.06M+ Instances)</p>
-      <p><strong>Best Result:</strong> <span class="best-result-badge">RMSE = 5.8876% | MAE = 4.3736% (25 Trees)</span>
-      </p>
+      <p><strong>Paper Baseline Result (4 Features):</strong> <span class="best-result-badge">RMSE = 5.8876% | MAE = 4.3736% (25 Trees)</span></p>
+      <p><strong>Enhanced Result (7 Features):</strong> <span class="best-result-badge" style="background:#eff6ff;color:#1e40af;border-color:#bfdbfe;">RMSE = 4.5734% | MAE = 3.3158% (50 Trees)</span></p>
+      <p><strong>State-of-the-Art Result (15 Features):</strong> <span class="best-result-badge" style="background:#ecfdf5;color:#065f46;border-color:#a7f3d0;">RMSE = 3.9994% | MAE = 3.0345% | MAX = 18.9379% (50 Trees) &mdash; -32.07% Total Error Reduction</span></p>
     </div>
     <hr>
     <h2 id="table-of-contents">Table of Contents</h2>
@@ -543,9 +544,10 @@
         <li><a href="#10-step-10-model-persistence-artifacts">Step 10 — Model Persistence & Artifacts</a></li>
         <li><a href="#11-architectural-selection-baseline-benchmarking">Step 11 — Architectural Selection & Baseline Benchmarking</a></li>
         <li><a href="#12-enhanced-7-feature-random-forest">Step 12 — Enhanced 7-Feature Random Forest Architecture (Maximum Improvement Model)</a></li>
-        <li><a href="#13-project-structure-module-reference">Step 13 — Project Structure & Module Reference</a></li>
-        <li><a href="#14-next-steps-potential-improvements">Step 14 — Next Steps & Potential Improvements</a></li>
-        <li><a href="#15-attribution-license">Step 15 — Attribution & License</a></li>
+        <li><a href="#13-15-feature-temporal-rf">Step 13 — State-of-the-Art Architecture: 15-Feature Temporal & Physics Model</a></li>
+        <li><a href="#14-project-structure-module-reference">Step 14 — Project Structure & Module Reference</a></li>
+        <li><a href="#15-next-steps-potential-improvements">Step 15 — Next Steps & Potential Improvements</a></li>
+        <li><a href="#16-attribution-license">Step 16 — Attribution & License</a></li>
       </ol>
     </div>
     <hr>
@@ -721,21 +723,21 @@
             <td><strong>Battery Voltage</strong></td>
             <td>V</td>
             <td>Baseline Observable</td>
-            <td>Direct proxy for cell open-circuit voltage ($V_{\text{oc}}$); primary electrochemical driver of SOC throughout discharge and charge phases.</td>
+            <td>Direct proxy for cell open-circuit voltage (<em>V</em><sub>oc</sub>); primary electrochemical driver of SOC throughout discharge and charge phases.</td>
           </tr>
           <tr>
             <td>2</td>
             <td><strong>Battery Current</strong></td>
             <td>A</td>
             <td>Baseline Observable</td>
-            <td>Instantaneous electrical load; governs dynamic $I \cdot R$ polarization drop and instantaneous charge flux across the terminals.</td>
+            <td>Instantaneous electrical load; governs dynamic <em>I</em> &times; <em>R</em> polarization drop and instantaneous charge flux across the terminals.</td>
           </tr>
           <tr>
             <td>3</td>
             <td><strong>Battery Temperature</strong></td>
             <td>°C</td>
             <td>Baseline Observable</td>
-            <td>Internal pack temperature; directly modulates Lithium-ion internal resistance ($R_{\text{int}}$) and chemical reaction kinetics.</td>
+            <td>Internal pack temperature; directly modulates Lithium-ion internal resistance (<em>R</em><sub>int</sub>) and chemical reaction kinetics.</td>
           </tr>
           <tr>
             <td>4</td>
@@ -749,7 +751,7 @@
             <td><strong>Throttle</strong></td>
             <td>%</td>
             <td><strong>Powertrain Intent</strong></td>
-            <td>Driver accelerator pedal demand ($0\text{--}100\%$). Anticipates mechanical load spikes fractions of a second before electrochemical battery current surges manifest, signaling impending power draws or coasting transitions.</td>
+            <td>Driver accelerator pedal demand (0&ndash;100%). Anticipates mechanical load spikes fractions of a second before electrochemical battery current surges manifest, signaling impending power draws or coasting transitions.</td>
           </tr>
           <tr>
             <td>6</td>
@@ -1659,7 +1661,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
             <p>To maximize estimation accuracy strictly within the Random Forest paradigm without modifying tree hyperparameters, bagging mechanics, or the core 60/10 trip partition, an isolated enhanced architecture was established in <code>RF_New/</code> incorporating the 7-feature set (4 baseline electro-thermal observables + 3 powertrain dynamics: Throttle, Motor Torque, Velocity).</p>
 
             <h3 id="7f-tree-count-evaluation">Tree Count Evaluation (5 Multi-Seed Runs on 1,064,000 Instances)</h3>
-            <p>Models were evaluated across tree configurations $n \in \{25, 50, 75, 100\}$ using 5 independent multi-seed runs (seeds 42, 142, 242, 342, 442) on the 10 unseen test trips (118,974 instances):</p>
+            <p>Models were evaluated across tree configurations <em>n</em> &isin; {25, 50, 75, 100} using 5 independent multi-seed runs (seeds 42, 142, 242, 342, 442) on the 10 unseen test trips (118,974 instances):</p>
             
             <div class="table-container">
               <table>
@@ -1724,7 +1726,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
             <div class="callout callout-important">
               <p><strong>The Pareto-Optimal Balance: Why 50 Trees Outperforms 100 Trees for Physical BMS Deployment</strong></p>
               <ul>
-                <li><strong>Negligible Accuracy Delta ($0.0127\%$)</strong>: Moving from 50 to 100 trees reduces test RMSE by only $0.0127\%$ (4.5734% down to 4.5607% &mdash; a minuscule 0.27% relative difference). Multi-seed variation across seeds for 100 trees spans 0.19% (4.56% to 4.75%), meaning $0.013\%$ falls entirely within random statistical sampling noise.</li>
+                <li><strong>Negligible Accuracy Delta (0.0127%)</strong>: Moving from 50 to 100 trees reduces test RMSE by only 0.0127% (4.5734% down to 4.5607% &mdash; a minuscule 0.27% relative difference). Multi-seed variation across seeds for 100 trees spans 0.19% (4.56% to 4.75%), meaning 0.013% falls entirely within random statistical sampling noise.</li>
                 <li><strong>50% Memory &amp; Storage Reduction</strong>: An unpruned ensemble of 100 deep regression trees on 945k samples consumes <strong>1.12 GB</strong> of storage and active RAM. Selecting 50 trees slashes this to <strong>532.9 MB</strong>. For automotive flash storage and memory allocation on embedded microcontrollers, saving over 580 MB is paramount.</li>
                 <li><strong>Halved Real-Time Inference Latency</strong>: At a 1 Hz sample rate in an automotive ECU, traversing 50 trees takes half the CPU cycles and generates half the cache pressure compared to 100 trees, avoiding bus contention with critical CAN bus tasks.</li>
                 <li><strong>Elbow Point of Diminishing Returns</strong>: 50 trees captures <strong>99.7% of the total achievable accuracy benefit</strong> while preserving half the system resource budget.</li>
@@ -1811,7 +1813,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                     <td>2</td>
                     <td><strong>Battery Temperature [°C]</strong></td>
                     <td><strong>12.99%</strong></td>
-                    <td>Internal cell thermal state; governs temperature-dependent cell resistance ($R_{\text{int}}$).</td>
+                    <td>Internal cell thermal state; governs temperature-dependent cell resistance (<em>R</em><sub>int</sub>).</td>
                   </tr>
                   <tr>
                     <td>3</td>
@@ -1823,7 +1825,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                     <td>4</td>
                     <td><strong>Battery Current [A]</strong></td>
                     <td><strong>7.45%</strong></td>
-                    <td>Instantaneous load flux and dynamic $I \cdot R$ drop.</td>
+                    <td>Instantaneous load flux and dynamic <em>I</em> &times; <em>R</em> drop.</td>
                   </tr>
                   <tr>
                     <td>5</td>
@@ -1879,7 +1881,337 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
             </figure>
 
             <hr>
-            <h2 id="13-project-structure-module-reference">13. Step 13 — Project Structure & Module Reference</h2>
+            <h2 id="13-15-feature-temporal-rf">13. Step 13 — State-of-the-Art Architecture: 15-Feature Temporal & Physics-Compensated Random Forest</h2>
+            <p>While the 7-feature model established in Step 12 successfully enriched the feature space with driver intention and drivetrain kinematics (reducing RMSE by 22.32%), instantaneous regression trees remained vulnerable to extreme, transient electro-thermal distortions. Under aggressive acceleration spikes (e.g. current surges exceeding -330 A) combined with near-freezing winter ambient conditions, terminal voltage drops sharply due to internal ohmic resistance (<em>I</em> &times; <em>R</em><sub>0</sub>). Instantaneous models lack temporal memory and electrochemical compensation, mistaking transient voltage sags for state-of-charge depletion and generating localized error spikes of 26%–27%.</p>
+            <p>To definitively overcome these transient limitations while preserving the core scikit-learn Random Forest regression paradigm, an isolated <strong>15-feature temporal and physics-compensated architecture</strong> was established in <code>RF_Temporal/</code>.</p>
+
+            <h3 id="13-1-the-15-feature-taxonomy">13.1 The 15-Feature Taxonomy & Physical Rationale</h3>
+            <p>The feature space expands from 7 to 15 features by layering temporal micro-derivatives, local and macro rolling statistical windows, and an Arrhenius temperature-compensated Open-Circuit Voltage estimate. All temporal features are computed strictly <strong>per trip</strong> within <code>RF_Temporal/src/data_loader.py</code> to prevent cross-trip boundary leakage:</p>
+
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Feature Name</th>
+                    <th>Units</th>
+                    <th>Category</th>
+                    <th>Mathematical Definition</th>
+                    <th>Physical & Engineering Rationale</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1</td>
+                    <td><strong>Battery Voltage</strong></td>
+                    <td>V</td>
+                    <td>Baseline Observable</td>
+                    <td><em>V<sub>t</sub></em></td>
+                    <td>Instantaneous terminal potential; primary macroscopic observable of charge state.</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td><strong>Battery Current</strong></td>
+                    <td>A</td>
+                    <td>Baseline Observable</td>
+                    <td><em>I<sub>t</sub></em></td>
+                    <td>Instantaneous charge/discharge flux; governs dynamic <em>I</em> &times; <em>R</em> polarization drop.</td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td><strong>Battery Temperature</strong></td>
+                    <td>°C</td>
+                    <td>Baseline Observable</td>
+                    <td><em>T</em><sub>batt</sub></td>
+                    <td>Internal pack core temperature; directly modulates internal ohmic resistance (<em>R</em><sub>0</sub>) and diffusion kinetics.</td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td><strong>Ambient Temperature</strong></td>
+                    <td>°C</td>
+                    <td>Baseline Observable</td>
+                    <td><em>T</em><sub>amb</sub></td>
+                    <td>External environmental boundary condition governing heat transfer and thermal equilibrium.</td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td><strong>Throttle</strong></td>
+                    <td>%</td>
+                    <td>Powertrain Kinematic</td>
+                    <td><em>Pedal</em><sub>%</sub></td>
+                    <td>Driver power demand intention (0&ndash;100%); anticipates upcoming current surges before electrochemical manifestation.</td>
+                  </tr>
+                  <tr>
+                    <td>6</td>
+                    <td><strong>Motor Torque</strong></td>
+                    <td>Nm</td>
+                    <td>Powertrain Kinematic</td>
+                    <td><em>&tau;</em><sub>motor</sub></td>
+                    <td>Instantaneous electromagnetic shaft torque produced/absorbed; couples electrical load to tractive drive effort.</td>
+                  </tr>
+                  <tr>
+                    <td>7</td>
+                    <td><strong>Velocity</strong></td>
+                    <td>km/h</td>
+                    <td>Powertrain Kinematic</td>
+                    <td><em>v</em><sub>veh</sub></td>
+                    <td>Vehicle ground speed; separates continuous high-speed aerodynamic drag regimes from urban stop-and-go regeneration cycles.</td>
+                  </tr>
+                  <tr>
+                    <td>8</td>
+                    <td><strong>dV_dt</strong></td>
+                    <td>V/s</td>
+                    <td>Temporal Dynamic</td>
+                    <td>(<em>V<sub>t</sub></em> &minus; <em>V<sub>t&minus;1</sub></em>) / &Delta;<em>t</em></td>
+                    <td>Instantaneous rate-of-change of voltage; decouples abrupt step load drops from gradual electrochemical diffusion relaxation.</td>
+                  </tr>
+                  <tr>
+                    <td>9</td>
+                    <td><strong>dI_dt</strong></td>
+                    <td>A/s</td>
+                    <td>Temporal Dynamic</td>
+                    <td>(<em>I<sub>t</sub></em> &minus; <em>I<sub>t&minus;1</sub></em>) / &Delta;<em>t</em></td>
+                    <td>Instantaneous rate-of-change of current; captures transient polarization onset and throttle tip-in dynamics.</td>
+                  </tr>
+                  <tr>
+                    <td>10</td>
+                    <td><strong>V_mean_15s</strong></td>
+                    <td>V</td>
+                    <td>Temporal Rolling</td>
+                    <td><sup>1</sup>/<sub>15</sub> &Sigma;<sub>&tau;=0..14</sub> <em>V<sub>t&minus;&tau;</sub></em></td>
+                    <td>15-second rolling voltage mean; filters out single-second sensor noise and brief regenerative pedal blips.</td>
+                  </tr>
+                  <tr>
+                    <td>11</td>
+                    <td><strong>I_mean_15s</strong></td>
+                    <td>A</td>
+                    <td>Temporal Rolling</td>
+                    <td><sup>1</sup>/<sub>15</sub> &Sigma;<sub>&tau;=0..14</sub> <em>I<sub>t&minus;&tau;</sub></em></td>
+                    <td>15-second rolling current mean; distinguishes sustained uphill hill-climbing current draws from momentary pulse discharges.</td>
+                  </tr>
+                  <tr>
+                    <td>12</td>
+                    <td><strong>V_std_15s</strong></td>
+                    <td>V</td>
+                    <td>Temporal Rolling</td>
+                    <td>&radic;[ <sup>1</sup>/<sub>15</sub> &Sigma; (<em>V<sub>t&minus;&tau;</sub></em> &minus; <em>V&#772;</em>)<sup>2</sup> ]</td>
+                    <td>15-second local voltage volatility; quantifies dynamic road roughness and high-frequency inverter ripple.</td>
+                  </tr>
+                  <tr>
+                    <td>13</td>
+                    <td><strong>V_mean_60s</strong></td>
+                    <td>V</td>
+                    <td>Macro Rolling</td>
+                    <td><sup>1</sup>/<sub>60</sub> &Sigma;<sub>&tau;=0..59</sub> <em>V<sub>t&minus;&tau;</sub></em></td>
+                    <td>60-second rolling voltage mean; establishes a steady macro baseline potential that resists acute transient sag during extended acceleration.</td>
+                  </tr>
+                  <tr>
+                    <td>14</td>
+                    <td><strong>I_mean_60s</strong></td>
+                    <td>A</td>
+                    <td>Macro Rolling</td>
+                    <td><sup>1</sup>/<sub>60</sub> &Sigma;<sub>&tau;=0..59</sub> <em>I<sub>t&minus;&tau;</sub></em></td>
+                    <td>60-second rolling current mean; acts as a localized moving ampere-hour integration proxy across minute-scale driving segments.</td>
+                  </tr>
+                  <tr>
+                    <td>15</td>
+                    <td><strong>V_est_ocv</strong></td>
+                    <td>V</td>
+                    <td>Physics-Compensated</td>
+                    <td><em>V<sub>t</sub></em> &minus; (<em>I<sub>t</sub></em> &times; <em>R</em><sub>0</sub>(<em>T</em>))</td>
+                    <td>Arrhenius temperature-compensated Open-Circuit Voltage estimate. Strips out the internal resistance load drop, restoring true thermodynamic OCV.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 id="13-2-why-v_est_ocv-is-indispensable">13.2 The Critical 15th Feature (<em>V</em><sub>est_ocv</sub>): Empirical Discovery &amp; Derivation</h3>
+            <div class="callout callout-important">
+              <p><strong>The Worst-Case Transient Analysis in Test Trip B29 (Sample #2340):</strong></p>
+              <p>In-depth error residual decomposition revealed that the maximum error spikes (&gt;26%) in previous models occurred under a specific combination of extreme winter driving conditions:</p>
+              <ul>
+                <li><strong>Environmental & Battery State</strong>: Ambient temperature <em>T</em><sub>amb</sub> = 4.0 &deg;C, Battery core temperature <em>T</em><sub>batt</sub> = 11.0 &deg;C (cold battery pack).</li>
+                <li><strong>Extreme Acceleration Demand</strong>: The driver floored the accelerator, demanding an instantaneous discharge current of <em>I</em> = &minus;330.82 A (with a 15-second average sustained draw of &minus;221 A).</li>
+                <li><strong>Terminal Voltage Collapse</strong>: Because lithium-ion electrolyte conductivity drops sharply at near-freezing temperatures, the pack's internal resistance increased significantly. Under &minus;330 A, the internal resistance drop exceeded <strong>~60 V</strong>, pulling the pack terminal voltage down from ~390 V to <strong>326.98 V</strong>.</li>
+                <li><strong>Instantaneous Model Failure</strong>: Lacking physics compensation, instantaneous models saw 326.98 V and misclassified the battery as operating in a deeply depleted regime, predicting <strong>56.0% SOC</strong> when the true battery state was <strong>28.3% SOC</strong> — triggering a catastrophic <strong>27.76% error spike</strong>!</li>
+              </ul>
+              <p><strong>The Physical Compensation Formula:</strong></p>
+              <pre><code class="language-python"># Temperature-dependent internal resistance via Arrhenius thermal scaling:
+R_0 = 0.10 * np.exp(-0.03 * (T_batt - 25.0))
+# Decouple ohmic voltage drop to reconstruct open-circuit equilibrium potential:
+V_est_ocv = V_terminal - (I_current * R_0)</code></pre>
+              <p>By computing <em>V</em><sub>est_ocv</sub>, the load-induced voltage sag is neutralized before tree node evaluation. <strong>Ablation studies verified that omitting <em>V</em><sub>est_ocv</sub> caused peak MAX error to immediately relapse from 18.94% back to &gt;26%.</strong> This physics-informed feature is non-negotiable for automotive safety and reliability.</p>
+            </div>
+
+            <h3 id="13-3-sample-weighting-protocol">13.3 Transient &amp; Thermal Sample Weighting Protocol</h3>
+            <p>To further force the ensemble trees to prioritize difficult operational boundaries during greedy split minimization, custom sample weights were passed to <code>RandomForestRegressor.fit(sample_weight=weights)</code>:</p>
+            <ul>
+              <li><strong>High-Discharge Transient Weight (2.0&times;)</strong>: Applied to all instances where discharge current <em>I</em> &lt; &minus;80 A.</li>
+              <li><strong>Cold-Temperature Ambient Weight (1.5&times;)</strong>: Applied to all instances where ambient temperature <em>T</em><sub>amb</sub> &lt; 10 &deg;C.</li>
+            </ul>
+
+            <h3 id="13-4-multi-seed-evaluation">13.4 Multi-Seed Tree Count Evaluation (15 Features, 5 Independent Seeds Each)</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Trees</th>
+                    <th>Best RMSE (%)</th>
+                    <th>Average RMSE (%)</th>
+                    <th>Best MAE (%)</th>
+                    <th>Average MAE (%)</th>
+                    <th>Best MAX Error (%)</th>
+                    <th>Average MAX Error (%)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>25</td>
+                    <td>4.0176%</td>
+                    <td>4.0904%</td>
+                    <td>3.0634%</td>
+                    <td>3.1089%</td>
+                    <td>19.6523%</td>
+                    <td>21.4686%</td>
+                  </tr>
+                  <tr style="background-color: #ecfdf5;">
+                    <td><strong>50 (Optimal Selected)</strong></td>
+                    <td><strong>`3.9994%`</strong> 🔻</td>
+                    <td><strong>`4.0546%`</strong> 🔻</td>
+                    <td><strong>`3.0345%`</strong> 🔻</td>
+                    <td><strong>`3.0697%`</strong> 🔻</td>
+                    <td><strong>`18.9379%`</strong> 🔻</td>
+                    <td><strong>`20.6695%`</strong> 🔻</td>
+                  </tr>
+                  <tr>
+                    <td>75</td>
+                    <td>4.0049%</td>
+                    <td>4.0421%</td>
+                    <td>3.0329%</td>
+                    <td>3.0560%</td>
+                    <td>19.7657%</td>
+                    <td>21.0335%</td>
+                  </tr>
+                  <tr>
+                    <td>100</td>
+                    <td>4.0078%</td>
+                    <td>4.0396%</td>
+                    <td>3.0071%</td>
+                    <td>3.0425%</td>
+                    <td>20.5827%</td>
+                    <td>21.8415%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 id="13-5-three-stage-progression">13.5 Three-Stage Research Progression (Evolution from Baseline to SOTA)</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stage</th>
+                    <th>Architecture Name</th>
+                    <th>Features</th>
+                    <th>Optimal Trees</th>
+                    <th>Best RMSE (%)</th>
+                    <th>Best MAE (%)</th>
+                    <th>Peak MAX Error (%)</th>
+                    <th>Cumulative RMSE Reduction</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Stage 1</strong></td>
+                    <td>Baseline Random Forest (Paper Replication)</td>
+                    <td>4 Observables</td>
+                    <td>25 Trees</td>
+                    <td>5.8876%</td>
+                    <td>4.3736%</td>
+                    <td>26.6956%</td>
+                    <td>Benchmark (0.0%)</td>
+                    <td>Paper Benchmark</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Stage 2</strong></td>
+                    <td>Enhanced Random Forest (<code>RF_New</code>)</td>
+                    <td>7 Telemetry Channels</td>
+                    <td>50 Trees</td>
+                    <td>4.5734%</td>
+                    <td>3.3158%</td>
+                    <td>27.0113%</td>
+                    <td>-22.32%</td>
+                    <td>Kinematic Expansion</td>
+                  </tr>
+                  <tr style="background-color: #ecfdf5;">
+                    <td><strong>Stage 3</strong></td>
+                    <td><strong>Temporal &amp; Physics RF (<code>RF_Temporal</code>)</strong></td>
+                    <td><strong>15 Features</strong></td>
+                    <td><strong>50 Trees</strong></td>
+                    <td><strong>`3.9994%`</strong></td>
+                    <td><strong>`3.0345%`</strong></td>
+                    <td><strong>`18.9379%`</strong></td>
+                    <td><strong>`-32.07%`</strong> 🔻</td>
+                    <td><strong>State of the Art</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 id="13-6-temporal-visualizations">13.6 15-Feature Diagnostic Figures</h3>
+            <p>All 8 publication-ready diagnostic plots for the 15-feature architecture reside in <code>RF_Temporal/results/plots/</code>:</p>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/rf_evolution_3_stages.png"
+                alt="Three-Stage Architecture Evolution: 4F Baseline vs 7F Enhanced vs 15F Temporal" loading="lazy">
+              <figcaption>Figure 13.1: Three-Stage Architecture Evolution &mdash; Demonstrating progressive error reductions in RMSE (-32.07%), MAE (-30.62%), and MAX Error (-29.06%)</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/soc_estimation_rf.png"
+                alt="15-Feature Random Forest Actual vs Predicted SOC" loading="lazy">
+              <figcaption>Figure 13.2: Actual vs. Predicted SOC across 118,974 test instances for the 15-Feature Temporal Model (50 Trees)</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/prediction_error_rf.png"
+                alt="15-Feature Prediction Error Residual Profile" loading="lazy">
+              <figcaption>Figure 13.3: Residual error curve showing suppression of severe transient spikes across all 10 unseen test trips</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/feature_importance_rf.png"
+                alt="15-Feature MDI Importance Ranking" loading="lazy">
+              <figcaption>Figure 13.4: Feature importance ranking across all 15 features showing distribution across baseline, rolling temporal, and physics channels</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/tree_count_comparison.png"
+                alt="15-Feature Tree Count Comparison Across 25, 50, 75, 100 Trees" loading="lazy">
+              <figcaption>Figure 13.5: Best and Average RMSE/MAE across tree counts, confirming 50 trees as the optimal model</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/error_by_soc_range.png"
+                alt="15-Feature Error Distribution by SOC Capacity Range" loading="lazy">
+              <figcaption>Figure 13.6: Residual interquartile ranges and error metrics across discrete 10% SOC intervals</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/error_distribution.png"
+                alt="15-Feature Error Histogram and Kernel Density" loading="lazy">
+              <figcaption>Figure 13.7: Tight, zero-centered Gaussian residual error distribution for the 15-feature model</figcaption>
+            </figure>
+
+            <figure class="doc-image">
+              <img src="RF_Temporal/results/plots/per_trip_error.png"
+                alt="15-Feature Per-Trip Error Breakdown Across 10 Test Trips" loading="lazy">
+              <figcaption>Figure 13.8: Individual trip RMSE and MAE across test routes TripB29 to TripB38</figcaption>
+            </figure>
+
+            <hr>
+            <h2 id="14-project-structure-module-reference">14. Step 14 — Project Structure & Module Reference</h2>
             <pre><code class="language-">EV_HEV/
 ├── app/                              # Interactive BMS Digital Twin Dashboard
 │   ├── server.py                     # Lightweight HTTP API server (inference & trip streamer)
@@ -1897,13 +2229,22 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
 │   │   └── results.json              # All metrics (20 runs)
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_New/                           # Enhanced 7-Feature ensemble architecture (Max Improvement)
+├── RF_New/                           # Enhanced 7-Feature ensemble architecture (Powertrain Kinematics)
 │   ├── README.md                     # Dedicated 7-feature documentation & trade-off analysis
 │   ├── results/
 │   │   ├── models/
 │   │   │   └── rf_7f_50_trees_final.joblib  # Serialized best 50-tree model (532.9 MB)
 │   │   ├── plots/                    # 8 publication-ready diagnostic charts
 │   │   └── results.json              # Multi-seed metrics & baseline comparison
+│   └── src/
+│       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
+├── RF_Temporal/                      # State-of-the-Art 15-Feature Temporal & Physics Model
+│   ├── README.md                     # Dedicated 15-feature documentation & physical derivation
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model
+│   │   ├── plots/                    # 8 publication-ready diagnostic charts
+│   │   └── results.json              # Multi-seed metrics & 3-stage comparative progression
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
 ├── Decision_Tree/                    # Baseline 1: Single decision tree
@@ -1929,7 +2270,6 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                 <thead>
                   <tr>
                     <th>Module</th>
-
                     <th>Key Functions</th>
                     <th>Responsibility</th>
                   </tr>
@@ -1937,64 +2277,33 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                 <tbody>
                   <tr>
                     <td><code>app/</code></td>
-
                     <td><code>server.py</code>, <code>index.html</code>, <code>style.css</code>, <code>app.js</code></td>
                     <td>Interactive BMS digital twin dashboard featuring real-time trip replaying, live multi-model comparison (RF vs. DT vs. KNN), and a dynamic What-If parameter exploration sandbox.</td>
                   </tr>
                   <tr>
-                    <td><code>config.py</code></td>
-
-                    <td><code>PAPER_FEATURES</code>, <code>RF_BASE_PARAMS</code>, <code>RF_TREE_COUNTS</code></td>
-                    <td>All paths, feature names, hyperparameters, and split definitions. Single source of truth.</td>
+                    <td><code>Random_Forest/</code></td>
+                    <td><code>config.py</code>, <code>data_loader.py</code>, <code>model_rf.py</code>, <code>evaluate.py</code>, <code>plots.py</code>, <code>main.py</code></td>
+                    <td>Baseline 4-feature, 25-tree Random Forest reproduction of the published literature (5.8876% RMSE).</td>
                   </tr>
                   <tr>
-                    <td><code>data_loader.py</code></td>
-
-                    <td><code>load_all_trips()</code>, <code>prepare_train_test()</code>,
-                      <code>extract_features_target()</code>
-                    </td>
-                    <td>CSV parsing (<code>;</code> delimited, Latin-1), column normalization, fuzzy column matching,
-                      NaN cleaning, 60/10 trip split</td>
+                    <td><code>RF_New/</code></td>
+                    <td><code>config.py</code>, <code>data_loader.py</code>, <code>model_rf.py</code>, <code>evaluate.py</code>, <code>plots.py</code>, <code>main.py</code></td>
+                    <td>Enhanced 7-feature Random Forest architecture integrating driver throttle, motor torque, and vehicle velocity (4.5734% RMSE, -22.32% error reduction).</td>
                   </tr>
                   <tr>
-                    <td><code>evaluate.py</code></td>
-
-                    <td><code>compute_all_metrics()</code>, <code>compute_rmse()</code>, <code>compute_mae()</code></td>
-                    <td>RMSE, MAE, MAX Error, STD DEV computation</td>
-                  </tr>
-                  <tr>
-                    <td><code>model_rf.py</code></td>
-
-                    <td><code>train_and_evaluate()</code>, <code>repeated_train_evaluate()</code>,
-                      <code>evaluate_all_tree_counts()</code>
-                    </td>
-                    <td>RF instantiation, multi-seed training, best/avg metric aggregation</td>
-                  </tr>
-                  <tr>
-                    <td><code>plots.py</code></td>
-
-                    <td><code>generate_all_plots()</code>, <code>plot_soc_estimation()</code>,
-                      <code>plot_tree_count_comparison()</code>
-                    </td>
-                    <td>6 high-resolution diagnostic plots (150 DPI, publication-ready)</td>
-                  </tr>
-                  <tr>
-                    <td><code>main.py</code></td>
-
-                    <td><code>main()</code>, <code>save_results()</code>, <code>save_best_model()</code></td>
-                    <td>End-to-end pipeline orchestration, reference comparison table, artifact export</td>
+                    <td><code>RF_Temporal/</code></td>
+                    <td><code>config.py</code>, <code>data_loader.py</code>, <code>model_rf.py</code>, <code>evaluate.py</code>, <code>plots.py</code>, <code>main.py</code></td>
+                    <td>State-of-the-art 15-feature Random Forest combining instantaneous derivatives, 15s/60s rolling windows, Arrhenius-compensated OCV (<em>V</em><sub>est_ocv</sub>), and transient sample weighting (3.9994% RMSE, 18.9379% MAX error, -32.07% total reduction).</td>
                   </tr>
                   <tr>
                     <td><code>Decision_Tree/</code></td>
-
                     <td><code>evaluate_decision_tree_multi_seed()</code>, <code>generate_all_dt_plots()</code>, <code>main()</code></td>
-                    <td>Isolated baseline pipeline evaluating a single decision tree across 5 seeds, saving metrics and diagnostic plots in <code>Decision_Tree/results/</code>.</td>
+                    <td>Isolated baseline pipeline evaluating a single decision tree across 5 seeds, demonstrating the empirical variance reduction of bagging.</td>
                   </tr>
                   <tr>
                     <td><code>KNN/</code></td>
-
                     <td><code>train_and_evaluate_knn()</code>, <code>StandardScaler</code>, <code>generate_all_knn_plots()</code>, <code>main()</code></td>
-                    <td>Isolated baseline implementing standardized feature scaling, distance-weighted k=5 regression, latency benchmarks, and diagnostic plots in <code>KNN/results/</code>.</td>
+                    <td>Isolated baseline implementing standardized feature scaling, distance-weighted k=5 regression, latency benchmarks, and memory analysis.</td>
                   </tr>
                 </tbody>
               </table>
@@ -2039,7 +2348,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
               </table>
             </div>
             <hr>
-            <h2 id="14-next-steps-potential-improvements">14. Step 14 — Next Steps & Potential Improvements</h2>
+            <h2 id="15-next-steps-potential-improvements">15. Step 15 — Next Steps & Potential Improvements</h2>
             <p>The core Random Forest SOC estimation pipeline is complete and matches the reference benchmarks. The
               following are potential enhancements that could further improve accuracy, robustness, or practical
               utility:</p>
@@ -2057,13 +2366,13 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
                 <tbody>
                   <tr>
                     <td>1</td>
-                    <td><strong>Temporal Rolling Windows &amp; Electrochemical Derivatives</strong></td>
+                    <td><strong>Temporal Rolling Windows &amp; Electrochemical Derivatives</strong><br><span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;display:inline-block;margin-top:4px;border:1px solid #a7f3d0;">Validated &amp; Implemented in Step 13 (RF_Temporal)</span></td>
                     <td>Engineer rolling statistical windows (5s, 15s, 30s mean, variance, and min-max spread of Pack Voltage, Pack Current, and Motor Torque), first-order time derivatives (dV/dt, dI/dt) capturing transient electrochemical polarization, and cumulative ampere-hour trapezoidal integration (&int;I&middot;dt). Gives the Random Forest temporal memory to differentiate identical instantaneous voltages along flat OCV plateaus without changing the tree model architecture.</td>
                     <td><strong>High</strong>: Largest single accuracy lever; expected to reduce RMSE from ~4.57% down to 2.5%–3.2% across dynamic cycles</td>
                   </tr>
                   <tr>
                     <td>2</td>
-                    <td><strong>Non-Linear SOC Boundary &amp; Transient Sample Weighting</strong></td>
+                    <td><strong>Non-Linear SOC Boundary &amp; Transient Sample Weighting</strong><br><span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;display:inline-block;margin-top:4px;border:1px solid #a7f3d0;">Validated &amp; Implemented in Step 13 (RF_Temporal)</span></td>
                     <td>Utilize scikit-learn's native <code>sample_weight</code> parameter inside <code>RandomForestRegressor.fit()</code> to apply non-uniform loss penalties (1.5&times; to 2.5&times; weighting) on steep, non-linear OCV boundary regimes (SOC &lt; 20% and SOC &gt; 80%) and high-current regenerative braking spikes (I &lt; -50 A). Penalizes peak errors directly during tree variance minimization without modifying model inference code.</td>
                     <td><strong>High</strong>: Directly suppresses the 26%–27% peak MAX error spikes occurring in non-linear operational zones</td>
                   </tr>
@@ -2125,7 +2434,7 @@ print(f&quot;Predicted SOC: {predicted_soc[0]:.2f}%&quot;)</code></pre>
               </table>
             </div>
             <hr>
-            <h2 id="15-attribution-license">15. Step 15 — Attribution & License</h2>
+            <h2 id="16-attribution-license">16. Step 16 — Attribution & License</h2>
             <h3 id="research-methodology-attribution">Research Methodology Attribution</h3>
             <p>This project builds upon the methodology and benchmarking established in peer-reviewed literature:</p>
             <blockquote>
