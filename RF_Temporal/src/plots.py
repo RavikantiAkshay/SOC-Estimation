@@ -39,17 +39,17 @@ def plot_soc_estimation(
     n_trees: int,
     save: bool = True,
 ) -> None:
-    """Actual SOC vs 12-Feature Temporal Predicted SOC across test instances."""
+    """Actual SOC vs Temporal Predicted SOC across test instances."""
     fig, ax = plt.subplots(figsize=(14, 5))
     instances = np.arange(len(y_true))
 
     ax.plot(instances, y_true, color="#1e40af", linewidth=0.9, alpha=0.95, label="Actual SOC (BMS Ground Truth)")
     ax.plot(instances, y_pred, color="#7c3aed", linewidth=0.7, alpha=0.85, linestyle="--",
-            label=f"Predicted by 12-Feature Temporal RF ({n_trees} trees)")
+            label=f"Predicted by Temporal RF ({n_trees} trees)")
 
     ax.set_xlabel("Test Instances (Seconds)", fontweight="bold")
     ax.set_ylabel("SOC (%)", fontweight="bold")
-    ax.set_title(f"SOC Estimation by 12-Feature Temporal Random Forest ({n_trees} Trees) — Test Data",
+    ax.set_title(f"SOC Estimation by Temporal & Physics-Compensated Random Forest ({n_trees} Trees) — Test Data",
                  fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
 
@@ -78,7 +78,7 @@ def plot_prediction_error(
 
     ax.set_xlabel("Test Instances (Seconds)", fontweight="bold")
     ax.set_ylabel("Error (Actual − Predicted %)", fontweight="bold")
-    ax.set_title(f"Prediction Error Profile — 12-Feature Temporal RF ({n_trees} Trees)", fontweight="bold")
+    ax.set_title(f"Prediction Error Profile — Temporal & Physics-Compensated RF ({n_trees} Trees)", fontweight="bold")
 
     plt.tight_layout()
     if save:
@@ -93,11 +93,11 @@ def plot_feature_importance(
     feature_names: list[str],
     save: bool = True,
 ) -> None:
-    """Horizontal bar chart showing relative feature importances across all 12 features."""
+    """Horizontal bar chart showing relative feature importances."""
     importances = model.feature_importances_
     sorted_idx = np.argsort(importances)
 
-    fig, ax = plt.subplots(figsize=(11, 7))
+    fig, ax = plt.subplots(figsize=(11, 8.5))
 
     base_set = set(BASELINE_FEATURES)
     power_set = set(POWERTRAIN_FEATURES)
@@ -117,7 +117,7 @@ def plot_feature_importance(
     ax.set_yticks(range(len(sorted_idx)))
     ax.set_yticklabels([feature_names[i] for i in sorted_idx], fontweight="bold")
     ax.set_xlabel("MDI Feature Importance Score", fontweight="bold")
-    ax.set_title("12-Feature Temporal Random Forest Feature Importance Ranking", fontweight="bold")
+    ax.set_title(f"Temporal Random Forest Feature Importance Ranking ({len(feature_names)} Features)", fontweight="bold")
 
     for bar in bars:
         w = bar.get_width()
@@ -125,9 +125,9 @@ def plot_feature_importance(
                     xytext=(5, 0), textcoords="offset points", ha="left", va="center", fontsize=9.5, fontweight="bold")
 
     legend_elements = [
-        Patch(facecolor="#2563eb", edgecolor="#0f172a", label="Baseline Observable (4F)"),
-        Patch(facecolor="#059669", edgecolor="#0f172a", label="Powertrain / Kinematic (3F)"),
-        Patch(facecolor="#7c3aed", edgecolor="#0f172a", label="Temporal & Dynamic State (5F)"),
+        Patch(facecolor="#2563eb", edgecolor="#0f172a", label=f"Baseline Observable ({len(BASELINE_FEATURES)}F)"),
+        Patch(facecolor="#059669", edgecolor="#0f172a", label=f"Powertrain / Kinematic ({len(POWERTRAIN_FEATURES)}F)"),
+        Patch(facecolor="#7c3aed", edgecolor="#0f172a", label=f"Temporal & Physics State ({len(feature_names) - len(BASELINE_FEATURES) - len(POWERTRAIN_FEATURES)}F)"),
     ]
     ax.legend(handles=legend_elements, loc="lower right", framealpha=0.9)
     ax.set_xlim(0, max(importances) * 1.18)
@@ -161,7 +161,7 @@ def plot_tree_count_comparison(
     b2 = ax1.bar(x + width/2, avg_rmse, width, label="Average RMSE", color="#c4b5fd", edgecolor="#0f172a", linewidth=0.5)
     ax1.set_xlabel("Number of Trees", fontweight="bold")
     ax1.set_ylabel("RMSE (%)", fontweight="bold")
-    ax1.set_title("Test RMSE across Tree Counts (12 Features)", fontweight="bold")
+    ax1.set_title("Test RMSE across Tree Counts (Temporal RF)", fontweight="bold")
     ax1.set_xticks(x)
     ax1.set_xticklabels([str(t) for t in tree_counts])
     ax1.legend(loc="upper right")
@@ -178,7 +178,7 @@ def plot_tree_count_comparison(
     b4 = ax2.bar(x + width/2, avg_mae, width, label="Average MAE", color="#93c5fd", edgecolor="#0f172a", linewidth=0.5)
     ax2.set_xlabel("Number of Trees", fontweight="bold")
     ax2.set_ylabel("MAE (%)", fontweight="bold")
-    ax2.set_title("Test MAE across Tree Counts (12 Features)", fontweight="bold")
+    ax2.set_title("Test MAE across Tree Counts (Temporal RF)", fontweight="bold")
     ax2.set_xticks(x)
     ax2.set_xticklabels([str(t) for t in tree_counts])
     ax2.legend(loc="upper right")
@@ -272,7 +272,7 @@ def plot_error_distribution(
 
     ax.set_xlabel("Prediction Residual (SOC %)", fontweight="bold")
     ax.set_ylabel("Probability Density", fontweight="bold")
-    ax.set_title(f"Error Distribution — 12-Feature Temporal RF ({n_trees} Trees) [Std: {std_err:.3f}%]", fontweight="bold")
+    ax.set_title(f"Error Distribution — Temporal RF ({n_trees} Trees) [Std: {std_err:.3f}%]", fontweight="bold")
     ax.legend(loc="upper right")
 
     plt.tight_layout()
@@ -311,7 +311,7 @@ def plot_per_trip_error(
     ax1.set_xticks(x)
     ax1.set_xticklabels(test_trips, rotation=35, ha="right")
     ax1.set_ylabel("RMSE (%)", fontweight="bold")
-    ax1.set_title("Test RMSE per Trip (12 Features)", fontweight="bold")
+    ax1.set_title("Test RMSE per Trip (Temporal RF)", fontweight="bold")
     ax1.legend(loc="upper right")
     for bar in b1:
         ax1.annotate(f"{bar.get_height():.2f}%", xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
@@ -322,7 +322,7 @@ def plot_per_trip_error(
     ax2.set_xticks(x)
     ax2.set_xticklabels(test_trips, rotation=35, ha="right")
     ax2.set_ylabel("MAE (%)", fontweight="bold")
-    ax2.set_title("Test MAE per Trip (12 Features)", fontweight="bold")
+    ax2.set_title("Test MAE per Trip (Temporal RF)", fontweight="bold")
     ax2.legend(loc="upper right")
     for bar in b2:
         ax2.annotate(f"{bar.get_height():.2f}%", xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),

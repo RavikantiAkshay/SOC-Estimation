@@ -44,7 +44,11 @@ from config import (
     FEATURE_V_STD_15S,
     FEATURE_V_MEAN_60S,
     FEATURE_I_MEAN_60S,
+    FEATURE_V_MEAN_180S,
+    FEATURE_V_SAG_60S,
+    FEATURE_POWER,
     FEATURE_V_EST_OCV,
+    FEATURE_V_EST_OCV_FULL,
     FEATURE_VOLTAGE,
     FEATURE_CURRENT,
     FEATURE_BATT_TEMP,
@@ -169,27 +173,37 @@ def engineer_trip_features(df: pd.DataFrame) -> pd.DataFrame:
     subset[FEATURE_V_MEAN_60S] = subset[FEATURE_VOLTAGE].rolling(window=60, min_periods=1).mean()
     subset[FEATURE_I_MEAN_60S] = subset[FEATURE_CURRENT].rolling(window=60, min_periods=1).mean()
 
-    # 4. Physics-informed Arrhenius internal resistance compensation
-    # R_0 increases exponentially as temperature drops below 25°C
-    t_factor = np.exp(-0.03 * (subset[FEATURE_BATT_TEMP] - 25.0))
-    r_est = 0.10 * t_factor
-    subset[FEATURE_V_EST_OCV] = subset[FEATURE_VOLTAGE] - (subset[FEATURE_CURRENT] * r_est)
+    # 4. Ultra-Macro 180-second rolling statistics (3-minute baseline anchor that resists 60s load pulls)
+    subset[FEATURE_V_MEAN_180S] = subset[FEATURE_VOLTAGE].rolling(window=180, min_periods=1).mean()
+
+    # 5. Dynamic voltage sag relative to 60s macro baseline
+    subset[FEATURE_V_SAG_60S] = subset[FEATURE_VOLTAGE] - subset[FEATURE_V_MEAN_60S]
+
+    # 6. Instantaneous electrical tractive power (kW)
+    subset[FEATURE_POWER] = (subset[FEATURE_VOLTAGE] * subset[FEATURE_CURRENT]) / 1000.0
+
+    # 7. Physics-informed calibrated Arrhenius electro-thermal resistance compensation
+    # Empirical R_0: 0.055 Ohm at 25°C, scaling with slope 0.060 for realistic sub-zero impedance
+    r_ohmic = 0.055 * np.exp(-0.060 * (subset[FEATURE_BATT_TEMP] - 25.0))
+    r_pol = 0.040 * np.exp(-0.045 * (subset[FEATURE_BATT_TEMP] - 25.0))
+    subset[FEATURE_V_EST_OCV] = subset[FEATURE_VOLTAGE] - (subset[FEATURE_CURRENT] * r_ohmic)
+    subset[FEATURE_V_EST_OCV_FULL] = subset[FEATURE_VOLTAGE] - (subset[FEATURE_CURRENT] * r_ohmic) - (subset[FEATURE_I_MEAN_15S] * r_pol)
 
     return subset
 
 
 def compute_sample_weights(train_df: pd.DataFrame) -> np.ndarray:
     """
-    Compute non-uniform sample weights to prioritize extreme operating regimes:
-      - Heavy discharge (Current < -80 A): 2.0x weight
-      - Cold ambient temperatures (< 10°C): 1.5x weight
+    Compute non-uniform sample weights prioritizing extreme electro-thermal operating regimes:
+      - Cold battery electrolyte (Batt Temp <= 5°C): 2.0x weight
+      - Heavy discharge transient (Current < -80 A): 2.0x weight
+      - Severe acceleration voltage-collapse outliers (Current < -100 A and Voltage < 335 V): 3.0x weight
     """
     weights = np.ones(len(train_df), dtype=np.float32)
-    heavy_discharge_mask = train_df[FEATURE_CURRENT] < -80.0
-    cold_temp_mask = train_df[FEATURE_AMBIENT_TEMP] < 10.0
-
-    weights[heavy_discharge_mask] *= 2.0
-    weights[cold_temp_mask] *= 1.5
+    weights[train_df[FEATURE_BATT_TEMP] <= 5.0] *= 2.0
+    weights[train_df[FEATURE_CURRENT] < -80.0] *= 2.0
+    outlier_mask = (train_df[FEATURE_CURRENT] < -100.0) & (train_df[FEATURE_VOLTAGE] < 335.0)
+    weights[outlier_mask] *= 3.0
 
     return weights
 

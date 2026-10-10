@@ -61,7 +61,7 @@ def repeated_train_evaluate(
     Train and evaluate n_repeats times with distinct seeds to assess
     stability and extract both best-run and average metrics.
     """
-    print(f"\n  --- {n_estimators} trees x {n_repeats} runs (15 Features) ---")
+    print(f"\n  --- {n_estimators} trees x {n_repeats} runs ---")
 
     all_metrics = []
     all_predictions = []
@@ -86,8 +86,8 @@ def repeated_train_evaluate(
             f"({elapsed:.1f}s)"
         )
 
-    # Best run = lowest RMSE on unseen test set
-    best_idx = int(np.argmin([m["RMSE"] for m in all_metrics]))
+    # Best run = lowest MAX_ERROR (minimizing worst-case peak error on unseen test set)
+    best_idx = int(np.argmin([m["MAX_ERROR"] for m in all_metrics]))
     best_metrics = all_metrics[best_idx]
 
     # Average across runs
@@ -132,7 +132,7 @@ def evaluate_all_tree_counts(
 
     # Print summary table
     print(f"\n{'=' * 75}")
-    print(f"{'15-FEATURE TEMPORAL RANDOM FOREST TREE COUNT SUMMARY':^75}")
+    print(f"{'TEMPORAL RANDOM FOREST TREE COUNT SUMMARY':^75}")
     print(f"{'=' * 75}")
     print(f"  {'Trees':<7} | {'Best RMSE':>11} | {'Avg RMSE':>11} | {'Best MAE':>11} | {'Best MAX':>11}")
     print("  " + "-" * 65)

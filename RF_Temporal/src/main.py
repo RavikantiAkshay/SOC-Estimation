@@ -26,6 +26,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from config import (
     RF_TREE_COUNTS,
+    RF_FEATURE_NAMES,
     RESULTS_DIR,
     MODELS_DIR,
     BASELINE_4F_25T,
@@ -37,13 +38,13 @@ from evaluate import print_metrics
 from plots import generate_all_plots
 
 
-def save_results(results: dict, best_tree_count: int) -> None:
+def save_results(results: dict, best_tree_count: int, feature_count: int = 19) -> None:
     """Save metrics and comparative progression to results.json."""
     best_temp = results[best_tree_count]["best_metrics"]
 
     output = {
-        "model_architecture": "Random Forest (15 Features: 7 Base + 8 Temporal/Physics)",
-        "feature_count": 15,
+        "model_architecture": f"Random Forest ({feature_count} Features: Temporal & Physics-Compensated)",
+        "feature_count": feature_count,
         "best_tree_count": best_tree_count,
         "final_test_metrics": best_temp,
         "progression_across_stages": {
@@ -59,7 +60,7 @@ def save_results(results: dict, best_tree_count: int) -> None:
                 "mae": ENHANCED_7F_50T["mae"],
                 "max_error": ENHANCED_7F_50T["max_error"],
             },
-            "stage_3_temporal_15f": {
+            "stage_3_temporal": {
                 "trees": best_tree_count,
                 "rmse": best_temp["RMSE"],
                 "mae": best_temp["MAE"],
@@ -108,14 +109,14 @@ def save_best_model(results: dict, best_tree_count: int) -> None:
 
 def main():
     print("=" * 75)
-    print("  SOC Estimation using 15-Feature Temporal Random Forest (RF_Temporal)")
-    print("  Features: 4 Baseline + 3 Powertrain + 8 Temporal / Physics States")
+    print(f"  SOC Estimation using Temporal Random Forest (RF_Temporal)")
+    print(f"  Features: {len(RF_FEATURE_NAMES)} (Baseline + Powertrain + Temporal / Physics States)")
     print("=" * 75)
 
     start_total = time.time()
 
     # Step 1: Load data and engineer temporal features per trip
-    print("\n[Step 1] Loading data & computing 15 features per trip...")
+    print(f"\n[Step 1] Loading data & computing {len(RF_FEATURE_NAMES)} features per trip...")
     data = prepare_train_test()
 
     X_train = data["X_train"]
@@ -134,7 +135,7 @@ def main():
     best_result = results[best_n]
 
     print(f"\n[Step 3] Selected operational tree count: {best_n} trees (Optimal Model)")
-    print_metrics(best_result["best_metrics"], f"Best Run — RF 15-Features ({best_n} trees)")
+    print_metrics(best_result["best_metrics"], f"Best Run — RF {len(feature_names)}-Features ({best_n} trees)")
 
     # Step 4: Three-Stage Benchmark Evolution Summary
     print("\n" + "=" * 80)
@@ -145,13 +146,13 @@ def main():
     print(f"  {'1. Baseline (4F)':<25} | {'25':<7} | {BASELINE_4F_25T['rmse']:>9.4f}% | {BASELINE_4F_25T['mae']:>9.4f}% | {BASELINE_4F_25T['max_error']:>10.4f}%")
     print(f"  {'2. Enhanced (7F)':<25} | {'50':<7} | {ENHANCED_7F_50T['rmse']:>9.4f}% | {ENHANCED_7F_50T['mae']:>9.4f}% | {ENHANCED_7F_50T['max_error']:>10.4f}%")
     m_temp = best_result["best_metrics"]
-    print(f"  {'3. Temporal (15F)':<25} | {best_n:<7} | {m_temp['RMSE']:>9.4f}% | {m_temp['MAE']:>9.4f}% | {m_temp['MAX_ERROR']:>10.4f}%")
+    print(f"  {'3. Temporal RF':<25} | {best_n:<7} | {m_temp['RMSE']:>9.4f}% | {m_temp['MAE']:>9.4f}% | {m_temp['MAX_ERROR']:>10.4f}%")
     print("  " + "-" * 76)
 
     # Step 5: Save model, results, and diagnostic plots
     print("\n[Step 5] Saving model binary, metrics JSON, and diagnostic plots...")
     save_best_model(results, best_n)
-    save_results(results, best_n)
+    save_results(results, best_n, feature_count=len(feature_names))
 
     generate_all_plots(
         y_test=y_test,

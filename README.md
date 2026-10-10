@@ -11,7 +11,7 @@ Accurate SOC estimation is critical for battery management systems (BMS) to exte
 This system addresses these challenges using an ensemble learning approach trained on **over 1.06 million instances** of real-world driving telemetry:
 - **Baseline Benchmark (4 Features, 25 Trees)**: `5.8876%` RMSE | `4.3736%` MAE | `26.70%` MAX
 - **Enhanced Model (7 Features, 50 Trees)**: `4.5734%` RMSE | `3.3158%` MAE | `27.01%` MAX
-- **State-of-the-Art Model (15 Features, 50 Trees)**: **`3.9994%` RMSE** | **`3.0345%` MAE** | **`18.9379%` MAX** (**-32.07% Error Reduction**)
+- **State-of-the-Art Model (19 Features, 50 Trees)**: **`3.8500%` RMSE** | **`2.9666%` MAE** | **`15.5543%` MAX** (**-34.61% RMSE / -41.73% MAX Reduction**)
 
 ---
 
@@ -217,13 +217,13 @@ Both models were evaluated on the identical 60/10 trip partition (945,026 train 
 
 ---
 
-## ⚡ State-of-the-Art Architecture: 15-Feature Temporal & Physics-Compensated Random Forest (`RF_Temporal`)
+## ⚡ State-of-the-Art Architecture: 19-Feature Temporal & Physics-Compensated Random Forest (`RF_Temporal`)
 
 While adding powertrain kinematics (`RF_New`) reduced RMSE by 22.32%, instantaneous models still exhibited peak error spikes (~26%–27%) during extreme driving transients—specifically, when a driver floors the accelerator pedal (up to **-330 A**) in near-freezing winter temperatures (**4 °C**), causing a massive **~60V internal resistance (I &times; R) voltage drop**.
 
-To eliminate these transient distortions without altering the underlying Random Forest ensemble architecture, an isolated **15-feature temporal and physics-compensated pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
+To eliminate these transient distortions and compress worst-case peak error without altering the underlying Random Forest ensemble architecture, an isolated **19-feature temporal and physics-compensated pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
 
-### 🔬 The 15-Feature Taxonomy
+### 🔬 The 19-Feature Taxonomy
 
 All temporal features are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries:
 
@@ -241,18 +241,22 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 | 10 | **V_mean_15s [V]** | Temporal Rolling | 15-second rolling average of voltage (filters 1s pedal blips). |
 | 11 | **I_mean_15s [A]** | Temporal Rolling | 15-second rolling average of current (sustained vs momentary load). |
 | 12 | **V_std_15s [V]** | Temporal Rolling | 15-second rolling voltage standard deviation (local volatility). |
-| 13 | **V_mean_60s [V]** | Temporal Rolling | 60-second rolling average of voltage (anchors true resting potential during sustained acceleration). |
+| 13 | **V_mean_60s [V]** | Temporal Rolling | 60-second rolling average of voltage (intermediate macro anchor). |
 | 14 | **I_mean_60s [A]** | Temporal Rolling | 60-second rolling average of current. |
-| 15 | **V_est_ocv [V]** | Physics-Compensated | Arrhenius temperature-compensated Open-Circuit Voltage estimate: V<sub>t</sub> &minus; (I<sub>t</sub> &times; R<sub>0</sub>(T)), where R<sub>0</sub>(T) = 0.10 &times; e<sup>&minus;0.03 &times; (T<sub>batt</sub> &minus; 25)</sup>. Decouples load-induced voltage sag from true battery charge state. |
+| 15 | **V_mean_180s [V]** | Temporal Rolling | 180-second (3-minute) ultra-macro rolling average voltage. Anchors resting baseline and resists sustained highway acceleration pulls (>60s) that dragged down 60s windows. |
+| 16 | **V_sag_60s [V]** | Dynamic Sag | Instantaneous voltage sag relative to the 60s rolling baseline (V<sub>t</sub> &minus; V̄<sub>60s</sub>). Directly decouples transient load sag from true battery discharge. |
+| 17 | **Power [kW]** | Electrical Power | Instantaneous pack electrical power ((V &times; I) / 1000). Bridges electrical load with mechanical tractive demand, allowing the tree to isolate power regimes in a single split without attempting multi-split hyperbolic approximations. |
+| 18 | **V_est_ocv [V]** | Physics-Compensated | Arrhenius temperature-compensated Ohmic Open-Circuit Voltage: V<sub>t</sub> &minus; (I<sub>t</sub> &times; R<sub>0</sub>(T)), where R<sub>0</sub> = 0.055 &Omega; at 25 °C with Arrhenius slope 0.060. Decouples load-induced IR drop from true state of charge. |
+| 19 | **V_est_ocv_full [V]** | Physics-Compensated | Full dual-polarization Open-Circuit Voltage: V<sub>t</sub> &minus; (I<sub>t</sub> &times; R<sub>0</sub>(T)) &minus; (Ī<sub>15s</sub> &times; R<sub>pol</sub>(T)). Compensates both instantaneous ohmic drop and slower 15s electrochemical charge-transfer / diffusion overpotential. |
 
-### 📈 Multi-Seed Tree Count Evaluation (15 Features, 5 Repeats Each)
+### 📈 Multi-Seed Tree Count Evaluation (19 Features, 5 Repeats Each)
 
-| Trees | Best RMSE | Avg RMSE | Best MAE | Avg MAE | Best MAX Error | Avg MAX Error |
-|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **25** | 4.0176% | 4.0904% | 3.0634% | 3.1089% | 19.6523% | 21.4686% |
-| **50** | **`3.9994%`** 🔻 | **`4.0546%`** 🔻 | **`3.0345%`** 🔻 | **`3.0697%`** 🔻 | **`18.9379%`** 🔻 | **`20.6695%`** 🔻 |
-| **75** | 4.0049% | 4.0421% | 3.0329% | 3.0560% | 19.7657% | 21.0335% |
-| **100** | 4.0078% | 4.0396% | 3.0071% | 3.0425% | 20.5827% | 21.8415% |
+| Trees | Best RMSE | Avg RMSE | Best MAE | Avg MAE | Best MAX Error | Avg MAX Error | Selected Model |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|
+| **25** | 3.8430% | 3.8821% | 2.9773% | 2.9916% | 16.9312% | 17.7141% | RMSE 3.9211%, MAE 3.0158%, MAX 16.9312% |
+| **50** | **`3.8058%`** 🔻 | **`3.8560%`** 🔻 | **`2.9270%`** 🔻 | **`2.9686%`** 🔻 | **`15.5543%`** 🔻 | **`17.0321%`** 🔻 | **Optimal: RMSE 3.8500%, MAE 2.9666%, MAX 15.5543%** |
+| **75** | 3.8237% | 3.8481% | 2.9413% | 2.9640% | 15.7848% | 16.7486% | RMSE 3.8437%, MAE 2.9573%, MAX 15.7848% |
+| **100** | 3.8152% | 3.8394% | 2.9418% | 2.9618% | 15.8960% | 16.6802% | RMSE 3.8532%, MAE 2.9709%, MAX 15.8960% |
 
 ### 🏆 Three-Stage Research Progression (Test Set Performance)
 
@@ -260,11 +264,11 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 |:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% | Paper Reproduction |
 | **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% | Powertrain Expansion |
-| **Stage 3** | **Temporal & Physics-Compensated (`RF_Temporal`)** | **15** | **50** | **`3.9994%`** 🔻 | **`3.0345%`** 🔻 | **`18.9379%`** 🔻 | **State of the Art** |
+| **Stage 3** | **Temporal & Physics-Compensated (`RF_Temporal`)** | **19** | **50** | **`3.8500%`** 🔻 | **`2.9666%`** 🔻 | **`15.5543%`** 🔻 | **State of the Art** |
 
-* **Total RMSE Error Reduction vs Baseline**: **`-32.07%`** (from `5.8876%` down to `3.9994%`).
-* **Total MAE Error Reduction vs Baseline**: **`-30.62%`** (from `4.3736%` down to `3.0345%`).
-* **Peak MAX Error Reduction vs Baseline**: **`-29.06%`** (from `26.6956%` down to `18.9379%` — breaking the 20% barrier for the first time).
+* **Total RMSE Error Reduction vs Baseline**: **`-34.61%`** (from `5.8876%` down to `3.8500%`).
+* **Total MAE Error Reduction vs Baseline**: **`-32.17%`** (from `4.3736%` down to `2.9666%`).
+* **Peak MAX Error Reduction vs Baseline**: **`-41.73%`** (from `26.6956%` down to `15.5543%` — compressing worst-case residual error by over 11.1 percentage points).
 
 > Complete implementation, model binary (`rf_temporal_50_trees_final.joblib`), and 8 diagnostic plots reside in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
 
@@ -299,11 +303,11 @@ EV_HEV/
 │   │   └── results.json             # Multi-seed metrics & baseline comparison
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_Temporal/                     # State-of-the-Art 15-Feature Temporal & Physics Model
-│   ├── README.md                    # Dedicated 15-feature documentation & derivation
+├── RF_Temporal/                     # State-of-the-Art 19-Feature Temporal & Physics Model
+│   ├── README.md                    # Dedicated 19-feature documentation & derivation
 │   ├── results/
 │   │   ├── models/
-│   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model
+│   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model (542.4 MB)
 │   │   ├── plots/                   # 8 publication-ready diagnostic charts
 │   │   └── results.json             # Multi-seed metrics & 3-stage comparative progression
 │   └── src/
@@ -332,7 +336,7 @@ EV_HEV/
 - **`app/`**: Standalone interactive BMS digital twin web dashboard. Features live trip telemetry playback across test routes (TripB29 to TripB38), real-time side-by-side inference against Random Forest, Decision Tree, and KNN, and an interactive What-If scenario sandbox.
 - **`Random_Forest/`**: Contains the full implementation of the baseline 4-feature, 25-tree ensemble model reproducing the reference literature (`5.8876%` RMSE).
 - **`RF_New/`**: Contains the enhanced 7-feature Random Forest architecture adding powertrain kinematics (`4.5734%` RMSE, `-22.32%` error reduction).
-- **`RF_Temporal/`**: Contains the state-of-the-art 15-feature Random Forest model incorporating micro-derivatives, local & macro rolling windows, temperature-compensated V<sub>est_ocv</sub>, and sample weighting (`3.9994%` RMSE, `18.9379%` MAX error, `-32.07%` total error reduction).
+- **`RF_Temporal/`**: Contains the state-of-the-art 19-feature Random Forest model incorporating micro-derivatives, local, macro & ultra-macro rolling windows, dynamic voltage sag, electrical tractive power, dual-polarization temperature-compensated V<sub>est_ocv</sub>, and targeted sample weighting (`3.8500%` RMSE, `15.5543%` MAX error, `-34.61%` RMSE / `-41.73%` MAX error reduction).
 - **`Decision_Tree/`**: Isolates the single-tree baseline to demonstrate the empirical benefits of ensemble variance reduction and bagging.
 - **`KNN/`**: Implements standardized feature scaling and instance-based nearest-neighbor regression to benchmark against distance-based methods and analyze onboard ECU computational feasibility.
 

@@ -74,7 +74,11 @@ FEATURE_I_MEAN_15S = "I_mean_15s [A]"
 FEATURE_V_STD_15S = "V_std_15s [V]"
 FEATURE_V_MEAN_60S = "V_mean_60s [V]"
 FEATURE_I_MEAN_60S = "I_mean_60s [A]"
+FEATURE_V_MEAN_180S = "V_mean_180s [V]"
+FEATURE_V_SAG_60S = "V_sag_60s [V]"
+FEATURE_POWER = "Power [kW]"
 FEATURE_V_EST_OCV = "V_est_ocv [V]"
+FEATURE_V_EST_OCV_FULL = "V_est_ocv_full [V]"
 
 TEMPORAL_FEATURES = [
     FEATURE_DV_DT,
@@ -84,11 +88,17 @@ TEMPORAL_FEATURES = [
     FEATURE_V_STD_15S,
     FEATURE_V_MEAN_60S,
     FEATURE_I_MEAN_60S,
+    FEATURE_V_MEAN_180S,
+    FEATURE_V_SAG_60S,
+    FEATURE_POWER,
     FEATURE_V_EST_OCV,
+    FEATURE_V_EST_OCV_FULL,
 ]
 
-# Full 15-feature input matrix
+# Full 19-feature input matrix
 ALL_15_FEATURES = BASELINE_FEATURES + POWERTRAIN_FEATURES + TEMPORAL_FEATURES
+ALL_FEATURES = ALL_15_FEATURES  # Alias for consistency
+RF_FEATURE_NAMES = ALL_FEATURES
 
 # Target variable (manufacturer-estimated SOC)
 TARGET_SOC = "SoC [%]"
