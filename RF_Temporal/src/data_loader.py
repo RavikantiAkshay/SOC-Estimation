@@ -2,7 +2,7 @@
 data_loader.py
 ==============
 Data loading, preprocessing, temporal feature engineering, and train/test
-partitioning for the 15-feature Temporal & Physics-Compensated Random Forest model.
+partitioning for the 17-feature Temporal & Dynamic Random Forest model.
 
 Features engineered strictly PER TRIP to avoid temporal data leakage:
   1. Battery Voltage [V]
@@ -19,7 +19,9 @@ Features engineered strictly PER TRIP to avoid temporal data leakage:
  12. V_std_15s [V]        - 15s rolling voltage standard deviation
  13. V_mean_60s [V]       - 60s rolling average voltage (macro baseline anchor)
  14. I_mean_60s [A]       - 60s rolling average current
- 15. V_est_ocv [V]        - Arrhenius temperature-compensated Open-Circuit Voltage [V - I * R(T)]
+ 15. V_mean_180s [V]      - 180s rolling average voltage (macro trend anchor)
+ 16. V_sag_60s [V]        - 60s dynamic voltage sag
+ 17. Power [kW]           - Instantaneous electrical power
 """
 
 import os
@@ -127,8 +129,8 @@ def _find_matching_column(df: pd.DataFrame, target_name: str) -> str:
 
 def engineer_trip_features(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Extract 7 base features, time, and target, clean decimals, and compute
-    the 8 temporal and physics-compensated features strictly within this single trip.
+    Extract base features, time, and target, clean decimals, and compute
+    temporal and dynamic features strictly within this single trip.
     """
     raw_7 = BASELINE_FEATURES + POWERTRAIN_FEATURES
     resolved_7 = [_find_matching_column(df, f) for f in raw_7]
@@ -182,7 +184,7 @@ def engineer_trip_features(df: pd.DataFrame) -> pd.DataFrame:
     # 6. Instantaneous electrical tractive power (kW)
     subset[FEATURE_POWER] = (subset[FEATURE_VOLTAGE] * subset[FEATURE_CURRENT]) / 1000.0
 
-    # 7. Physics-informed calibrated Arrhenius electro-thermal resistance compensation
+    # 7. Electro-thermal dynamic calibration
     # Empirical R_0: 0.055 Ohm at 25°C, scaling with slope 0.060 for realistic sub-zero impedance
     r_ohmic = 0.055 * np.exp(-0.060 * (subset[FEATURE_BATT_TEMP] - 25.0))
     r_pol = 0.040 * np.exp(-0.045 * (subset[FEATURE_BATT_TEMP] - 25.0))

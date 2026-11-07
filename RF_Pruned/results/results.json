@@ -1,0 +1,158 @@
+{
+  "title": "Stage 4: Random Forest Depth Pruning & Pareto Complexity Optimization",
+  "description": "Systematic evaluation of tree depth constraints to identify the production-optimal automotive ECU model.",
+  "candidate_depths_evaluated": [
+    10,
+    14,
+    18,
+    22,
+    26,
+    null
+  ],
+  "pareto_optimal_selected": {
+    "depth": 10,
+    "metrics": {
+      "depth_setting": 10,
+      "depth_label": "10",
+      "rmse": 3.706902087762911,
+      "mae": 2.8674880585150504,
+      "max_error": 16.43105120517801,
+      "std_dev": 3.660651891663264,
+      "total_nodes": 90958,
+      "max_actual_depth": 10,
+      "avg_actual_depth": 10.0,
+      "node_reduction_pct": 98.79251064010558,
+      "train_time_sec": 57.3042938709259,
+      "c_flash_footprint_mb": 1.0409317016601562,
+      "worst_case_branch_checks": 500
+    }
+  },
+  "depth_sweep_results": {
+    "10": {
+      "depth_setting": 10,
+      "depth_label": "10",
+      "rmse": 3.706902087762911,
+      "mae": 2.8674880585150504,
+      "max_error": 16.43105120517801,
+      "std_dev": 3.660651891663264,
+      "total_nodes": 90958,
+      "max_actual_depth": 10,
+      "avg_actual_depth": 10.0,
+      "node_reduction_pct": 98.79251064010558,
+      "train_time_sec": 57.3042938709259,
+      "c_flash_footprint_mb": 1.0409317016601562,
+      "worst_case_branch_checks": 500
+    },
+    "14": {
+      "depth_setting": 14,
+      "depth_label": "14",
+      "rmse": 3.827830103589588,
+      "mae": 2.956549096625913,
+      "max_error": 17.674909926448855,
+      "std_dev": 3.767326100300818,
+      "total_nodes": 759474,
+      "max_actual_depth": 14,
+      "avg_actual_depth": 14.0,
+      "node_reduction_pct": 89.91779970847571,
+      "train_time_sec": 78.80005049705505,
+      "c_flash_footprint_mb": 8.691490173339844,
+      "worst_case_branch_checks": 700
+    },
+    "18": {
+      "depth_setting": 18,
+      "depth_label": "18",
+      "rmse": 3.8342885301812517,
+      "mae": 2.931405271091751,
+      "max_error": 17.856509253443463,
+      "std_dev": 3.77803188710646,
+      "total_nodes": 2650570,
+      "max_actual_depth": 18,
+      "avg_actual_depth": 18.0,
+      "node_reduction_pct": 64.81304478269759,
+      "train_time_sec": 64.19102621078491,
+      "c_flash_footprint_mb": 30.33336639404297,
+      "worst_case_branch_checks": 900
+    },
+    "22": {
+      "depth_setting": 22,
+      "depth_label": "22",
+      "rmse": 3.915443059229662,
+      "mae": 3.019615220306506,
+      "max_error": 17.018856635962543,
+      "std_dev": 3.8532047839050185,
+      "total_nodes": 5094584,
+      "max_actual_depth": 22,
+      "avg_actual_depth": 22.0,
+      "node_reduction_pct": 32.368170220448654,
+      "train_time_sec": 37.350690603256226,
+      "c_flash_footprint_mb": 58.302886962890625,
+      "worst_case_branch_checks": 1100
+    },
+    "26": {
+      "depth_setting": 26,
+      "depth_label": "26",
+      "rmse": 3.837964967191516,
+      "mae": 2.9439240815141354,
+      "max_error": 16.66200805462966,
+      "std_dev": 3.77710666341221,
+      "total_nodes": 6766202,
+      "max_actual_depth": 26,
+      "avg_actual_depth": 26.0,
+      "node_reduction_pct": 10.17703861236562,
+      "train_time_sec": 42.98621678352356,
+      "c_flash_footprint_mb": 77.43303680419922,
+      "worst_case_branch_checks": 1300
+    },
+    "unconstrained": {
+      "depth_setting": null,
+      "depth_label": "None (Unconstrained)",
+      "rmse": 3.80578590255434,
+      "mae": 2.927001039947386,
+      "max_error": 17.8736779833715,
+      "std_dev": 3.756065989123443,
+      "total_nodes": 7558542,
+      "max_actual_depth": 59,
+      "avg_actual_depth": 43.9,
+      "node_reduction_pct": 0.0,
+      "train_time_sec": 54.81971454620361,
+      "c_flash_footprint_mb": 86.50064849853516,
+      "worst_case_branch_checks": 2450
+    }
+  },
+  "four_stage_evolution": {
+    "stage_1_baseline_4f": {
+      "rmse": 5.8876,
+      "mae": 4.3736,
+      "max_error": 26.6956,
+      "trees": 25,
+      "nodes": 3752787,
+      "size_mb": 257.7
+    },
+    "stage_2_enhanced_7f": {
+      "rmse": 4.5734,
+      "mae": 3.3158,
+      "max_error": 27.0113,
+      "trees": 50,
+      "nodes": 7720000,
+      "size_mb": 558.8
+    },
+    "stage_3_temporal_unconstrained": {
+      "rmse": 3.80578590255434,
+      "mae": 2.927001039947386,
+      "max_error": 17.8736779833715,
+      "trees": 50,
+      "nodes": 7558542,
+      "depth": 59
+    },
+    "stage_4_pareto_pruned": {
+      "rmse": 3.706902087762911,
+      "mae": 2.8674880585150504,
+      "max_error": 16.43105120517801,
+      "trees": 50,
+      "depth": 10,
+      "nodes": 90958,
+      "node_reduction_pct": 98.79251064010558,
+      "c_flash_mb": 1.0409317016601562
+    }
+  }
+}

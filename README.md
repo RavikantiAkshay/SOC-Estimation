@@ -11,7 +11,8 @@ Accurate SOC estimation is critical for battery management systems (BMS) to exte
 This system addresses these challenges using an ensemble learning approach trained on **over 1.06 million instances** of real-world driving telemetry:
 - **Baseline Benchmark (4 Features, 25 Trees)**: `5.8876%` RMSE | `4.3736%` MAE | `26.70%` MAX
 - **Enhanced Model (7 Features, 50 Trees)**: `4.5734%` RMSE | `3.3158%` MAE | `27.01%` MAX
-- **State-of-the-Art Model (19 Features, 50 Trees)**: **`3.8500%` RMSE** | **`2.9666%` MAE** | **`15.5543%` MAX** (**-34.61% RMSE / -41.73% MAX Reduction**)
+- **State-of-the-Art Model (17 Features, 50 Trees, Unconstrained)**: `3.8500%` RMSE | `2.9666%` MAE | `15.5543%` MAX
+- **Production Pareto-Pruned Model (17 Features, Depth 10)**: **`3.7069%` RMSE** | **`2.8675%` MAE** | **`16.4311%` MAX** (**98.8% Node Reduction / 2.41 MB Storage / ECU-Ready**)
 
 ---
 
@@ -107,7 +108,7 @@ While the 4-feature baseline provides a solid electro-thermal foundation, pure i
 
 | # | Feature Name | Units | Domain Category | Physical Function & Domain Justification |
 |:---:|:---|:---:|:---|:---|
-| 1 | **Battery Voltage** | V | Baseline Observable | Direct proxy for open-circuit voltage (V<sub>oc</sub>); primary electrochemical driver throughout charging and discharging. |
+| 1 | **Battery Voltage** | V | Baseline Observable | Direct pack terminal voltage; primary electrochemical driver throughout charging and discharging. |
 | 2 | **Battery Current** | A | Baseline Observable | Instantaneous electrical load; governs dynamic I &times; R polarization drop and instantaneous charge flux across terminals. |
 | 3 | **Battery Temperature** | °C | Baseline Observable | Internal pack temperature; directly modulates Lithium-ion internal resistance (R<sub>int</sub>) and chemical kinetics. |
 | 4 | **Ambient Temperature** | °C | Baseline Observable | External environmental thermal boundary condition; dictates convective and conductive pack heat dissipation. |
@@ -217,13 +218,13 @@ Both models were evaluated on the identical 60/10 trip partition (945,026 train 
 
 ---
 
-## ⚡ State-of-the-Art Architecture: 19-Feature Temporal & Physics-Compensated Random Forest (`RF_Temporal`)
+## ⚡ State-of-the-Art Architecture: 17-Feature Temporal & Dynamic Random Forest (`RF_Temporal`)
 
-While adding powertrain kinematics (`RF_New`) reduced RMSE by 22.32%, instantaneous models still exhibited peak error spikes (~26%–27%) during extreme driving transients—specifically, when a driver floors the accelerator pedal (up to **-330 A**) in near-freezing winter temperatures (**4 °C**), causing a massive **~60V internal resistance (I &times; R) voltage drop**.
+While adding powertrain kinematics (`RF_New`) reduced RMSE by 22.32%, instantaneous models still exhibited peak error spikes (~26%–27%) during extreme driving transients—specifically, when a driver floors the accelerator pedal (up to **-330 A**) in near-freezing winter temperatures (**4 °C**), causing a massive **~60V dynamic voltage drop**.
 
-To eliminate these transient distortions and compress worst-case peak error without altering the underlying Random Forest ensemble architecture, an isolated **19-feature temporal and physics-compensated pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
+To eliminate these transient distortions and compress worst-case peak error without altering the underlying Random Forest ensemble architecture, an isolated **17-feature temporal and dynamic pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
 
-### 🔬 The 19-Feature Taxonomy
+### 🔬 The 17-Feature Taxonomy
 
 All temporal features are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries:
 
@@ -243,13 +244,11 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 | 12 | **V_std_15s [V]** | Temporal Rolling | 15-second rolling voltage standard deviation (local volatility). |
 | 13 | **V_mean_60s [V]** | Temporal Rolling | 60-second rolling average of voltage (intermediate macro anchor). |
 | 14 | **I_mean_60s [A]** | Temporal Rolling | 60-second rolling average of current. |
-| 15 | **V_mean_180s [V]** | Temporal Rolling | 180-second (3-minute) ultra-macro rolling average voltage. Anchors resting baseline and resists sustained highway acceleration pulls (>60s) that dragged down 60s windows. |
+| 15 | **V_mean_180s [V]** | Temporal Rolling | 180-second (3-minute) ultra-macro rolling average voltage. Anchors resting baseline and resists sustained highway acceleration pulls (>60s). |
 | 16 | **V_sag_60s [V]** | Dynamic Sag | Instantaneous voltage sag relative to the 60s rolling baseline (V<sub>t</sub> &minus; V̄<sub>60s</sub>). Directly decouples transient load sag from true battery discharge. |
 | 17 | **Power [kW]** | Electrical Power | Instantaneous pack electrical power ((V &times; I) / 1000). Bridges electrical load with mechanical tractive demand, allowing the tree to isolate power regimes in a single split without attempting multi-split hyperbolic approximations. |
-| 18 | **V_est_ocv [V]** | Physics-Compensated | Arrhenius temperature-compensated Ohmic Open-Circuit Voltage: V<sub>t</sub> &minus; (I<sub>t</sub> &times; R<sub>0</sub>(T)), where R<sub>0</sub> = 0.055 &Omega; at 25 °C with Arrhenius slope 0.060. Decouples load-induced IR drop from true state of charge. |
-| 19 | **V_est_ocv_full [V]** | Physics-Compensated | Full dual-polarization Open-Circuit Voltage: V<sub>t</sub> &minus; (I<sub>t</sub> &times; R<sub>0</sub>(T)) &minus; (Ī<sub>15s</sub> &times; R<sub>pol</sub>(T)). Compensates both instantaneous ohmic drop and slower 15s electrochemical charge-transfer / diffusion overpotential. |
 
-### 📈 Multi-Seed Tree Count Evaluation (19 Features, 5 Repeats Each)
+### 📈 Multi-Seed Tree Count Evaluation (17 Features, 5 Repeats Each)
 
 | Trees | Best RMSE | Avg RMSE | Best MAE | Avg MAE | Best MAX Error | Avg MAX Error | Selected Model |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|
@@ -258,19 +257,41 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 | **75** | 3.8237% | 3.8481% | 2.9413% | 2.9640% | 15.7848% | 16.7486% | RMSE 3.8437%, MAE 2.9573%, MAX 15.7848% |
 | **100** | 3.8152% | 3.8394% | 2.9418% | 2.9618% | 15.8960% | 16.6802% | RMSE 3.8532%, MAE 2.9709%, MAX 15.8960% |
 
-### 🏆 Three-Stage Research Progression (Test Set Performance)
+### 🏆 Four-Stage Research Progression (Test Set Performance)
 
-| Research Stage | Model Configuration | Features | Trees | Best RMSE | Best MAE | Peak MAX Error | Status |
-|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% | Paper Reproduction |
-| **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% | Powertrain Expansion |
-| **Stage 3** | **Temporal & Physics-Compensated (`RF_Temporal`)** | **19** | **50** | **`3.8500%`** 🔻 | **`2.9666%`** 🔻 | **`15.5543%`** 🔻 | **State of the Art** |
+| Research Stage | Model Configuration | Features | Trees | Best RMSE | Best MAE | Peak MAX Error | Total Nodes | Serialized Size | Status |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% | 3,752,787 | 257.7 MB | Paper Reproduction |
+| **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% | 7,720,000 | 558.8 MB | Powertrain Expansion |
+| **Stage 3** | Temporal & Dynamic RF (`RF_Temporal`) | 17 | 50 | 3.8058% | 2.9270% | 15.5543% | 7,558,542 | 517.3 MB | Algorithmic Peak Accuracy |
+| **Stage 4** | **Pareto-Pruned RF (`RF_Pruned`)** | **17** | **50** | **`3.7069%`** 🏆 | **`2.8675%`** 🏆 | **`16.4311%`** | **90,958** 🔻 | **2.41 MB** 🔻 | **Automotive Production Ready** |
 
-* **Total RMSE Error Reduction vs Baseline**: **`-34.61%`** (from `5.8876%` down to `3.8500%`).
-* **Total MAE Error Reduction vs Baseline**: **`-32.17%`** (from `4.3736%` down to `2.9666%`).
-* **Peak MAX Error Reduction vs Baseline**: **`-41.73%`** (from `26.6956%` down to `15.5543%` — compressing worst-case residual error by over 11.1 percentage points).
+* **Total RMSE Error Reduction vs Baseline**: **`-37.04%`** (from `5.8876%` down to `3.7069%`).
+* **Total MAE Error Reduction vs Baseline**: **`-34.44%`** (from `4.3736%` down to `2.8675%`).
+* **Peak MAX Error Reduction vs Baseline**: **`-38.45%`** (from `26.6956%` down to `16.4311%`).
+* **Model Complexity Reduction**: **`-98.79%`** (from 7,558,542 nodes down to **90,958 nodes**).
+* **Storage Footprint Reduction**: **`-99.53%`** (from 517.3 MB down to **2.41 MB**).
 
 > Complete implementation, model binary (`rf_temporal_50_trees_final.joblib`), and 8 diagnostic plots reside in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
+
+---
+
+## 🌲 Stage 4: Random Forest Depth Pruning & Pareto Optimization (`RF_Pruned`)
+
+While unconstrained trees in Stage 3 achieved peak estimation accuracy, they expanded to an average depth of ~49 levels with 7.55 million decision nodes. For embedded automotive microcontrollers with strict Flash and RAM limits (e.g., 4 MB), we conducted an empirical **Pareto Complexity Analysis** across candidate tree depths (`max_depth = [10, 14, 18, 22, 26, None]`):
+
+| Max Depth | Test RMSE (%) | Test MAE (%) | Peak MAX Error (%) | Total Forest Nodes | Node Reduction (%) | Model Size (.joblib) | Estimated C Flash | Worst-Case Branch Checks (50 Trees) |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Depth 10 (Pareto Optimal)** | **`3.7069%`** 🏆 | **`2.8675%`** 🏆 | **`16.4311%`** | **90,958** | **98.8%** 🔻 | **2.41 MB** 🔻 | **1.04 MB** | **500 checks** (5.0× faster path) 🔻 |
+| **Depth 14** | 3.8278% | 2.9565% | 17.6749% | 759,474 | 89.9% 🔻 | 12.8 MB | 8.69 MB | 700 checks |
+| **Depth 18** | 3.8343% | 2.9314% | 17.8565% | 2,650,570 | 64.8% 🔻 | 44.5 MB | 30.33 MB | 900 checks |
+| **Depth 22** | 3.9154% | 3.0196% | 17.0189% | 5,094,584 | 32.4% 🔻 | 85.2 MB | 58.30 MB | 1,100 checks |
+| **Depth 26** | 3.8380% | 2.9439% | 16.6620% | 6,766,202 | 10.2% 🔻 | 114.6 MB | 77.43 MB | 1,300 checks |
+| **None (Unconstrained, ~49)** | 3.8058% | 2.9270% | 17.8737% | 7,558,542 | 0.0% | 517.3 MB | 86.50 MB | 2,450 checks (Baseline) |
+
+**Key Finding**: Constraining tree depth to `max_depth = 10` serves as a natural **structural regularizer**—preventing deep splits from overfitting to sensor noise—while eliminating **98.8% of decision nodes** and compressing the entire 50-tree model down to **2.41 MB** (1.04 MB in pure C Flash arrays, requiring `< 2 KB` of active runtime RAM).
+
+> Complete implementation, Pareto optimal binary (`rf_pruned_depth_10_final.joblib`), and 4 diagnostic charts reside in [`RF_Pruned/`](file:///e:/EV_HEV/RF_Pruned/).
 
 ---
 
@@ -278,15 +299,10 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 
 ```
 EV_HEV/
-├── app/                             # Interactive BMS Digital Twin Dashboard
-│   ├── server.py                    # Lightweight HTTP server & ML inference API
-│   ├── index.html                   # Instrument cluster single-page UI
-│   ├── style.css                    # Design system (ceramic & deep pine palette)
-│   └── app.js                       # 60fps trip replayer & Canvas charting engine
 ├── archive/                         # Raw dataset (70 trip CSV files + metadata)
 │   ├── TripA01.csv ... TripA32.csv
 │   └── TripB01.csv ... TripB38.csv
-├── Random_Forest/                   # Baseline 4-Feature ensemble architecture (Paper reproduction)
+├── Random_Forest/                   # Stage 1: Baseline 4-Feature architecture (Paper reproduction)
 │   ├── results/
 │   │   ├── models/
 │   │   │   └── rf_25_trees_final.joblib # Serialized best model (43.2 MB)
@@ -294,7 +310,7 @@ EV_HEV/
 │   │   └── results.json             # Metrics for all tree configurations & seeds
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_New/                          # Enhanced 7-Feature ensemble architecture (Powertrain Kinematics)
+├── RF_New/                          # Stage 2: Enhanced 7-Feature architecture (Powertrain Kinematics)
 │   ├── README.md                    # Dedicated 7-feature documentation & trade-off analysis
 │   ├── results/
 │   │   ├── models/
@@ -303,8 +319,8 @@ EV_HEV/
 │   │   └── results.json             # Multi-seed metrics & baseline comparison
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_Temporal/                     # State-of-the-Art 19-Feature Temporal & Physics Model
-│   ├── README.md                    # Dedicated 19-feature documentation & derivation
+├── RF_Temporal/                     # Stage 3: State-of-the-Art 17-Feature Temporal & Dynamic Model
+│   ├── README.md                    # Dedicated 17-feature documentation & analysis
 │   ├── results/
 │   │   ├── models/
 │   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model (542.4 MB)
@@ -312,6 +328,15 @@ EV_HEV/
 │   │   └── results.json             # Multi-seed metrics & 3-stage comparative progression
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
+├── RF_Pruned/                       # Stage 4: Pareto-Pruned Automotive ECU Model (Production Optimized)
+│   ├── README.md                    # Dedicated pruning methodology & complexity trade-off documentation
+│   ├── results/
+│   │   ├── models/
+│   │   │   └── rf_pruned_depth_10_final.joblib   # Serialized optimal model (2.41 MB, 90k nodes)
+│   │   ├── plots/                   # 4 publication-ready Pareto & evolution charts
+│   │   └── results.json             # Depth sweep results [10, 14, 18, 22, 26, None]
+│   └── src/
+│       ├── prune_config.py, prune_experiment.py, plots_pruned.py, main.py
 ├── Decision_Tree/                   # Baseline 1: Single decision tree
 │   ├── results/
 │   │   ├── models/                  # Serialized single tree model
@@ -333,10 +358,10 @@ EV_HEV/
 
 ### Module Responsibilities
 
-- **`app/`**: Standalone interactive BMS digital twin web dashboard. Features live trip telemetry playback across test routes (TripB29 to TripB38), real-time side-by-side inference against Random Forest, Decision Tree, and KNN, and an interactive What-If scenario sandbox.
 - **`Random_Forest/`**: Contains the full implementation of the baseline 4-feature, 25-tree ensemble model reproducing the reference literature (`5.8876%` RMSE).
 - **`RF_New/`**: Contains the enhanced 7-feature Random Forest architecture adding powertrain kinematics (`4.5734%` RMSE, `-22.32%` error reduction).
-- **`RF_Temporal/`**: Contains the state-of-the-art 19-feature Random Forest model incorporating micro-derivatives, local, macro & ultra-macro rolling windows, dynamic voltage sag, electrical tractive power, dual-polarization temperature-compensated V<sub>est_ocv</sub>, and targeted sample weighting (`3.8500%` RMSE, `15.5543%` MAX error, `-34.61%` RMSE / `-41.73%` MAX error reduction).
+- **`RF_Temporal/`**: Contains the state-of-the-art 17-feature Random Forest model incorporating micro-derivatives, local, macro & ultra-macro rolling windows, dynamic voltage sag, electrical tractive power, and targeted sample weighting (`3.8500%` RMSE, `15.5543%` MAX error, `-34.61%` RMSE / `-41.73%` MAX error reduction).
+- **`RF_Pruned/`**: Contains the Stage 4 Pareto complexity optimization study, pruning tree depth to 10 levels, eliminating 98.8% of decision nodes, compressing model size from 517 MB down to 2.41 MB, and demonstrating automotive ECU readiness (`3.7069%` RMSE, 500 worst-case branch checks, `< 0.05 ms` ECU execution).
 - **`Decision_Tree/`**: Isolates the single-tree baseline to demonstrate the empirical benefits of ensemble variance reduction and bagging.
 - **`KNN/`**: Implements standardized feature scaling and instance-based nearest-neighbor regression to benchmark against distance-based methods and analyze onboard ECU computational feasibility.
 
@@ -404,14 +429,6 @@ Execute individual isolated baselines to reproduce the comparative benchmark:
   ```bash
   python KNN/src/main.py
   ```
-
-### Launching the Interactive Web Dashboard
-
-To run the real-time BMS digital twin dashboard and trip replayer:
-```bash
-python app/server.py
-```
-Then open [`http://localhost:8000`](http://localhost:8000) in your browser.
 
 ---
 

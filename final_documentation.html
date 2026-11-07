@@ -419,7 +419,8 @@
       <p><strong>Fleet Telemetry:</strong> BMW i3 Real-World Driving Cycles (70 Trips, 1,064,000 Clean Instances)</p>
       <p><strong>Proposed Baseline Result (4 Features):</strong> <span class="best-result-badge">Random Forest (25 Trees) &mdash; RMSE = 5.8876% | MAE = 4.3736%</span></p>
       <p><strong>Maximum Improvement Result (7 Features):</strong> <span class="enhanced-badge">Enhanced RF (50 Trees) &mdash; RMSE = 4.5734% | MAE = 3.3158% (-22.32% Error Reduction)</span></p>
-      <p><strong>State-of-the-Art Result (19 Features):</strong> <span class="sota-badge">Temporal &amp; Physics RF (50 Trees) &mdash; RMSE = 3.8500% | MAE = 2.9666% | MAX = 15.5543% (-34.61% RMSE / -41.73% MAX Reduction)</span></p>
+      <p><strong>State-of-the-Art Result (17 Features):</strong> <span class="sota-badge">Temporal &amp; Dynamic RF (50 Trees) &mdash; RMSE = 3.8500% | MAE = 2.9666% | MAX = 15.5543% (-34.61% RMSE / -41.73% MAX Reduction)</span></p>
+      <p><strong>Production-Ready Pareto Result (Depth 10):</strong> <span class="best-result-badge" style="background:#ecfdf5;color:#047857;border-color:#10b981;">Pareto RF (50 Trees, Depth 10) &mdash; RMSE = 3.7069% | MAE = 2.8675% | MAX = 16.4311% (98.8% Node Reduction / 2.41 MB Storage / ECU-Ready)</span></p>
     </div>
     <hr>
 
@@ -431,12 +432,11 @@
         <li><a href="#part-3-decision-tree-baseline">Part 3 &mdash; Baseline Comparison 1: Single Decision Tree</a></li>
         <li><a href="#part-4-knn-baseline">Part 4 &mdash; Baseline Comparison 2: K-Nearest Neighbors (KNN with k-Sweep)</a></li>
         <li><a href="#part-5-enhanced-random-forest">Part 5 &mdash; Advanced Architecture: Enhanced 7-Feature Random Forest</a></li>
-        <li><a href="#part-6-temporal-physics-random-forest">Part 6 &mdash; State-of-the-Art Architecture: 19-Feature Temporal &amp; Physics-Compensated Random Forest</a></li>
-        <li><a href="#part-7-master-synthesis">Part 7 &mdash; Cross-Methodological Synthesis &amp; Benchmarking</a></li>
-        <li><a href="#part-8-digital-twin-app">Part 8 &mdash; Interactive BMS Digital Twin Dashboard</a></li>
+        <li><a href="#part-6-temporal-physics-random-forest">Part 6 &mdash; State-of-the-Art Architecture: 17-Feature Temporal &amp; Dynamic Random Forest</a></li>
+        <li><a href="#part-7-pareto-pruned-random-forest">Part 7 &mdash; Stage 4: Random Forest Depth Pruning &amp; Pareto Complexity Optimization</a></li>
+        <li><a href="#part-8-master-synthesis">Part 8 &mdash; Cross-Methodological Synthesis &amp; Four-Stage Benchmarking</a></li>
         <li><a href="#part-9-project-structure">Part 9 &mdash; Repository Structure &amp; Module Directory</a></li>
-        <li><a href="#part-10-next-steps">Part 10 &mdash; Next Steps &amp; Future Research Levers</a></li>
-        <li><a href="#part-11-attribution">Part 11 &mdash; Attribution, Literature References &amp; License</a></li>
+        <li><a href="#part-10-attribution">Part 10 &mdash; Attribution, Literature References &amp; License</a></li>
       </ol>
     </div>
     <hr>
@@ -469,7 +469,6 @@
       F --> G["<b>Evaluation & Model Selection</b><br /><i>RMSE, MAE, MAX ERROR, Latency, RAM</i>"]
       G --> H["<b>Artifact Serialization</b><br /><i>Model binaries (.joblib) & results.json</i>"]
       G --> I["<b>Complete Visualization Suite</b><br /><i>26 Publication-Quality Diagnostic Plots</i>"]
-      G --> J["<b>Interactive BMS Digital Twin</b><br /><i>Full-stack HTML5/Canvas replayer (app/)</i>"]
 
       style A fill:#e3f2fd,stroke:#1565c0
       style C fill:#fff3e0,stroke:#e65100
@@ -1346,12 +1345,12 @@
     <!-- ========================================================================= -->
     <!-- PART 6: STATE-OF-THE-ART ARCHITECTURE — 15-FEATURE TEMPORAL & PHYSICS RF  -->
     <!-- ========================================================================= -->
-    <h2 id="part-6-temporal-physics-random-forest">Part 6 — State-of-the-Art Architecture: 19-Feature Temporal & Physics-Compensated Random Forest</h2>
+    <h2 id="part-6-temporal-physics-random-forest">Part 6 — State-of-the-Art Architecture: 17-Feature Temporal & Dynamic Random Forest</h2>
     <p>While the 7-feature model established in Part 5 reduced test RMSE by 22.32% by introducing powertrain and driver demand kinematics, instantaneous decision trees remained fundamentally constrained: they evaluate battery states without temporal memory or electrochemical resistance compensation. During aggressive acceleration transients—particularly in cold winter ambient conditions—terminal voltage drops sharply due to internal ohmic resistance (<em>I</em> &times; <em>R</em><sub>0</sub>) and electrochemical diffusion polarization. Instantaneous models mistake this dynamic voltage sag for real state-of-charge depletion, generating transient peak error spikes of 26%–27%.</p>
-    <p>To definitively eliminate these transient distortions and compress worst-case peak error down to 15.55% while strictly preserving the scikit-learn Random Forest ensemble architecture, an isolated <strong>19-feature temporal and physics-compensated pipeline</strong> was established in <code>RF_Temporal/</code>.</p>
+    <p>To definitively eliminate these transient distortions and compress worst-case peak error down to 15.55% while strictly preserving the scikit-learn Random Forest ensemble architecture, an isolated <strong>17-feature temporal and dynamic pipeline</strong> was established in <code>RF_Temporal/</code>.</p>
 
-    <h3 id="6-1-feature-taxonomy">6.1 The 19-Feature Taxonomy & Physical Rationale</h3>
-    <p>The feature space expands from 7 to 19 features by incorporating instantaneous micro-derivatives, local, macro and ultra-macro rolling statistical windows, dynamic voltage sag, instantaneous electrical tractive power, and calibrated dual-polarization Open-Circuit Voltage estimates (<em>V</em><sub>est_ocv</sub> and <em>V</em><sub>est_ocv_full</sub>). All temporal channels are computed strictly <strong>per trip</strong> within <code>RF_Temporal/src/data_loader.py</code> to prevent cross-trip boundary leakage:</p>
+    <h3 id="6-1-feature-taxonomy">6.1 The 17-Feature Taxonomy & Dynamic Rationale</h3>
+    <p>The feature space expands from 7 to 17 features by incorporating instantaneous micro-derivatives, local, macro and ultra-macro rolling statistical windows, dynamic voltage sag, and instantaneous electrical tractive power. All temporal channels are computed strictly <strong>per trip</strong> within <code>RF_Temporal/src/data_loader.py</code> to prevent cross-trip boundary leakage:</p>
 
     <div class="table-container">
       <table>
@@ -1502,27 +1501,11 @@
             <td>(<em>V</em><sub>pack</sub> &times; <em>I</em><sub>pack</sub>) / 1000</td>
             <td>Instantaneous electrical terminal power; provides direct hyperbolic load demand to decision trees in a single split without requiring deep multi-split stair-step approximations.</td>
           </tr>
-          <tr>
-            <td>18</td>
-            <td><strong>V_est_ocv</strong></td>
-            <td>V</td>
-            <td>Physics-Compensated</td>
-            <td><em>V<sub>t</sub></em> &minus; (<em>I<sub>t</sub></em> &times; <em>R</em><sub>0</sub>(<em>T</em>))</td>
-            <td>Calibrated Arrhenius temperature-compensated Ohmic Open-Circuit Voltage estimate, using empirical <em>R</em><sub>0</sub> = 0.055 &Omega; at 25 &deg;C and Arrhenius slope 0.060 for realistic sub-zero electrolyte freezing.</td>
-          </tr>
-          <tr>
-            <td>19</td>
-            <td><strong>V_est_ocv_full</strong></td>
-            <td>V</td>
-            <td>Physics-Compensated</td>
-            <td><em>V<sub>t</sub></em> &minus; (<em>I<sub>t</sub></em> &times; <em>R</em><sub>0</sub>(<em>T</em>)) &minus; (<em>I&#772;</em><sub>15s</sub> &times; <em>R</em><sub>pol</sub>(<em>T</em>))</td>
-            <td>Full dual-polarization Open-Circuit Voltage estimate; decouples both instantaneous ohmic drop and slower 15s electrochemical charge-transfer / diffusion overpotential.</td>
-          </tr>
         </tbody>
       </table>
     </div>
 
-    <h3 id="6-2-why-v_est_ocv-is-indispensable">6.2 Forensic Analysis: Decoupling Transient Sags & Peak Error Compression</h3>
+    <h3 id="6-2-decoupling-transient-sags">6.2 Forensic Analysis: Decoupling Transient Sags & Peak Error Compression</h3>
     <div class="callout callout-important">
       <p><strong>Case 1: Severe Cold-Weather Acceleration in Test Trip B29 (Sample #2340):</strong></p>
       <ul>
@@ -1537,7 +1520,7 @@
         <li><strong>Continuous Full-Throttle Draw</strong>: The driver maintained continuous high-speed acceleration for &gt;60 seconds continuously, sustaining discharge currents &gt; &minus;220 A.</li>
         <li><strong>Macro Window Failure</strong>: Because the continuous acceleration exceeded 60 seconds, the 60s rolling average (<em>V</em>_mean_60s) was dragged all the way down to 322 V. Across 99.9% of normal driving, averaging 322 V over a full minute occurs only when the battery is depleted to ~28%–32% SOC. Decision trees split on <em>V</em>_mean_60s &le; 325 V and predicted 40.75% SOC when the true state was 59.69% SOC (an 18.94% peak error spike).</li>
       </ul>
-      <p><strong>The Multi-Scale Physics-Compensated Solution:</strong></p>
+      <p><strong>The Multi-Scale Temporal & Dynamic Solution:</strong></p>
       <pre><code class="language-python"># 1. Ultra-Macro 180s rolling window anchors resting potential across extended high-speed bursts
 V_mean_180s = V_terminal.rolling(window=180, min_periods=1).mean()
 
@@ -1547,12 +1530,8 @@ V_sag_60s = V_terminal - V_mean_60s
 # 3. Instantaneous electrical tractive power decouples load demand from voltage drop
 Power = (V_terminal * I_current) / 1000.0
 
-# 4. Calibrated Arrhenius dual-polarization internal resistance compensation
-r_ohmic = 0.055 * np.exp(-0.060 * (T_batt - 25.0))
-r_pol = 0.040 * np.exp(-0.045 * (T_batt - 25.0))
-V_est_ocv = V_terminal - (I_current * r_ohmic)
-V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code></pre>
-      <p>By supplying <em>V</em><sub>mean_180s</sub>, <em>V</em><sub>sag_60s</sub>, <code>Power [kW]</code>, and dual-polarization OCV, the Random Forest completely resolved the sustained load ambiguity, compressing peak maximum error from <strong>18.94% down to 15.5543%</strong> while driving test RMSE down to <strong>3.8500%</strong> and MAE to <strong>2.9666%</strong>.</p>
+# Dynamic multi-scale windowing stabilizes the prediction baseline</code></pre>
+      <p>By supplying <em>V</em><sub>mean_180s</sub>, <em>V</em><sub>sag_60s</sub>, and <code>Power [kW]</code>, the Random Forest completely resolved the sustained load ambiguity, compressing peak maximum error from <strong>18.94% down to 15.5543%</strong> while driving test RMSE down to <strong>3.8500%</strong> and MAE to <strong>2.9666%</strong>.</p>
     </div>
 
     <h3 id="6-3-sample-weighting-protocol">6.3 Targeted Electro-Thermal &amp; Outlier Sample Weighting Protocol</h3>
@@ -1563,7 +1542,7 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
       <li><strong>Severe Voltage-Collapse Outlier Weight (3.0&times;)</strong>: Applied to extreme acceleration regimes where current <em>I</em> &lt; &minus;100 A and terminal voltage <em>V</em> &lt; 335 V to heavily penalize tree splits that produce outlier estimation errors.</li>
     </ul>
 
-    <h3 id="6-4-multi-seed-evaluation">6.4 Multi-Seed Tree Count Evaluation (19 Features, 5 Independent Seeds Each)</h3>
+    <h3 id="6-4-multi-seed-evaluation">6.4 Multi-Seed Tree Count Evaluation (17 Features, 5 Independent Seeds Each)</h3>
     <p>Across 5 independent random seeds evaluated on 118,974 unseen test instances (TripB29 through TripB38):</p>
 
     <div class="table-container">
@@ -1668,8 +1647,8 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
           </tr>
           <tr style="background-color: #ecfdf5;">
             <td><strong>Stage 3</strong></td>
-            <td><strong>Temporal &amp; Physics RF (<code>RF_Temporal</code>)</strong></td>
-            <td><strong>19 Features</strong></td>
+            <td><strong>Temporal &amp; Dynamic RF (<code>RF_Temporal</code>)</strong></td>
+            <td><strong>17 Features</strong></td>
             <td><strong>50 Trees</strong></td>
             <td><strong>3.8500%</strong></td>
             <td><strong>2.9666%</strong></td>
@@ -1681,8 +1660,8 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
       </table>
     </div>
 
-    <h3 id="6-6-temporal-visualizations">6.6 19-Feature Diagnostic Figures</h3>
-    <p>All 8 publication-ready diagnostic plots for the 19-feature architecture reside in <code>RF_Temporal/results/plots/</code>:</p>
+    <h3 id="6-6-temporal-visualizations">6.6 17-Feature Diagnostic Figures</h3>
+    <p>All 8 publication-ready diagnostic plots for the 17-feature architecture reside in <code>RF_Temporal/results/plots/</code>:</p>
 
     <figure class="doc-image">
       <img src="RF_Temporal/results/plots/rf_evolution_3_stages.png" alt="Three-Stage Architecture Evolution" loading="lazy">
@@ -1691,44 +1670,165 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
 
     <figure class="doc-image">
       <img src="RF_Temporal/results/plots/soc_estimation_rf.png" alt="19-Feature Random Forest Actual vs Predicted SOC" loading="lazy">
-      <figcaption>Figure 6.2: Actual vs. Predicted SOC across 118,974 test instances for the 19-Feature Temporal Model (50 Trees)</figcaption>
+      <figcaption>Figure 6.2: Actual vs. Predicted SOC across 118,974 test instances for the 17-Feature Temporal Model (50 Trees)</figcaption>
     </figure>
 
     <figure class="doc-image">
-      <img src="RF_Temporal/results/plots/prediction_error_rf.png" alt="19-Feature Prediction Error Residual Profile" loading="lazy">
+      <img src="RF_Temporal/results/plots/prediction_error_rf.png" alt="17-Feature Prediction Error Residual Profile" loading="lazy">
       <figcaption>Figure 6.3: Residual error curve demonstrating suppression of transient spikes across all 10 unseen test driving cycles</figcaption>
     </figure>
 
     <figure class="doc-image">
-      <img src="RF_Temporal/results/plots/feature_importance_rf.png" alt="19-Feature MDI Importance Ranking" loading="lazy">
-      <figcaption>Figure 6.4: Feature importance ranking across all 19 features showing distribution across baseline observables, powertrain channels, rolling temporal memory, dynamic sag, electrical power, and dual-polarization physics states</figcaption>
+      <img src="RF_Temporal/results/plots/feature_importance_rf.png" alt="17-Feature MDI Importance Ranking" loading="lazy">
+      <figcaption>Figure 6.4: Feature importance ranking across all 17 features showing distribution across baseline observables, powertrain channels, rolling temporal memory, dynamic sag, electrical power</figcaption>
     </figure>
 
     <figure class="doc-image">
-      <img src="RF_Temporal/results/plots/tree_count_comparison.png" alt="19-Feature Tree Count Comparison Across 25, 50, 75, 100 Trees" loading="lazy">
+      <img src="RF_Temporal/results/plots/tree_count_comparison.png" alt="17-Feature Tree Count Comparison Across 25, 50, 75, 100 Trees" loading="lazy">
       <figcaption>Figure 6.5: Best and Average RMSE/MAE across tree counts, confirming 50 trees as the optimal model</figcaption>
     </figure>
 
     <figure class="doc-image">
-      <img src="RF_Temporal/results/plots/error_by_soc_range.png" alt="19-Feature Error Distribution by SOC Capacity Range" loading="lazy">
+      <img src="RF_Temporal/results/plots/error_by_soc_range.png" alt="17-Feature Error Distribution by SOC Capacity Range" loading="lazy">
       <figcaption>Figure 6.6: Residual interquartile ranges and error metrics across discrete 10% SOC intervals</figcaption>
     </figure>
 
     <figure class="doc-image">
-      <img src="RF_Temporal/results/plots/error_distribution.png" alt="19-Feature Error Histogram and Kernel Density" loading="lazy">
-      <figcaption>Figure 6.7: Tight, zero-centered Gaussian residual error distribution for the 19-feature model</figcaption>
+      <img src="RF_Temporal/results/plots/error_distribution.png" alt="17-Feature Error Histogram and Kernel Density" loading="lazy">
+      <figcaption>Figure 6.7: Tight, zero-centered Gaussian residual error distribution for the 17-feature model</figcaption>
     </figure>
 
     <figure class="doc-image">
-      <img src="RF_Temporal/results/plots/per_trip_error.png" alt="19-Feature Per-Trip Error Breakdown Across 10 Test Trips" loading="lazy">
+      <img src="RF_Temporal/results/plots/per_trip_error.png" alt="17-Feature Per-Trip Error Breakdown Across 10 Test Trips" loading="lazy">
       <figcaption>Figure 6.8: Individual trip RMSE and MAE across test routes TripB29 to TripB38</figcaption>
     </figure>
     <hr>
 
+
     <!-- ========================================================================= -->
-    <!-- PART 7: MASTER COMPARISON & CROSS-METHODOLOGICAL BENCHMARK                -->
+    <!-- PART 7: RANDOM FOREST DEPTH PRUNING & PARETO COMPLEXITY OPTIMIZATION      -->
     <!-- ========================================================================= -->
-    <h2 id="part-7-master-synthesis">Part 7 — Cross-Methodological Synthesis & Benchmarking</h2>
+    <h2 id="part-7-pareto-pruned-random-forest">Part 7 — Stage 4: Random Forest Depth Pruning & Pareto Complexity Optimization</h2>
+    <p>While the 17-feature temporal architecture in Part 6 achieved state-of-the-art estimation accuracy, unconstrained decision trees expanded down to an average depth of 49 levels, amassing <strong>7,558,542 decision nodes</strong> and requiring <strong>517.3 MB</strong> of storage. In automotive battery management systems (BMS), microcontrollers such as the Infineon AURIX or NXP S32K enforce strict memory budgets (often &le; 4 MB Flash) and microsecond execution constraints.</p>
+    
+    <p>To establish automotive production feasibility, we conducted an empirical <strong>Pareto Complexity Analysis</strong>, evaluating candidate tree depths (<code>max_depth &isin; [10, 14, 18, 22, 26, None]</code>) across 50-tree ensembles trained on 945,026 samples and tested on 118,974 unseen instances:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Max Depth</th>
+            <th>Test RMSE (%)</th>
+            <th>Test MAE (%)</th>
+            <th>Peak MAX Error (%)</th>
+            <th>Total Forest Nodes</th>
+            <th>Complexity Reduction (%)</th>
+            <th>Model Size (.joblib)</th>
+            <th>C Flash Array Footprint</th>
+            <th>Worst-Case Branch Checks (50 Trees)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background-color: #ecfdf5;">
+            <td><strong>Depth 10 (Pareto Optimal)</strong></td>
+            <td><strong>3.7069%</strong> &#127942;</td>
+            <td><strong>2.8675%</strong> &#127942;</td>
+            <td><strong>16.4311%</strong></td>
+            <td><strong>90,958</strong></td>
+            <td><strong>98.8%</strong> &#128315;</td>
+            <td><strong>2.41 MB</strong> &#128315;</td>
+            <td><strong>1.04 MB</strong></td>
+            <td><strong>500 checks</strong> (5.0&times; faster path) &#128315;</td>
+          </tr>
+          <tr>
+            <td><strong>Depth 14</strong></td>
+            <td>3.8278%</td>
+            <td>2.9565%</td>
+            <td>17.6749%</td>
+            <td>759,474</td>
+            <td>89.9% &#128315;</td>
+            <td>12.8 MB</td>
+            <td>8.69 MB</td>
+            <td>700 checks</td>
+          </tr>
+          <tr>
+            <td><strong>Depth 18</strong></td>
+            <td>3.8343%</td>
+            <td>2.9314%</td>
+            <td>17.8565%</td>
+            <td>2,650,570</td>
+            <td>64.8% &#128315;</td>
+            <td>44.5 MB</td>
+            <td>30.33 MB</td>
+            <td>900 checks</td>
+          </tr>
+          <tr>
+            <td><strong>Depth 22</strong></td>
+            <td>3.9154%</td>
+            <td>3.0196%</td>
+            <td>17.0189%</td>
+            <td>5,094,584</td>
+            <td>32.4% &#128315;</td>
+            <td>85.2 MB</td>
+            <td>58.30 MB</td>
+            <td>1,100 checks</td>
+          </tr>
+          <tr>
+            <td><strong>Depth 26</strong></td>
+            <td>3.8380%</td>
+            <td>2.9439%</td>
+            <td>16.6620%</td>
+            <td>6,766,202</td>
+            <td>10.2% &#128315;</td>
+            <td>114.6 MB</td>
+            <td>77.43 MB</td>
+            <td>1,300 checks</td>
+          </tr>
+          <tr>
+            <td><strong>None (Unconstrained, ~49)</strong></td>
+            <td>3.8058%</td>
+            <td>2.9270%</td>
+            <td>17.8737%</td>
+            <td>7,558,542</td>
+            <td>0.0% (Ref)</td>
+            <td>517.3 MB</td>
+            <td>86.50 MB</td>
+            <td>2,450 checks (Baseline)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-tip">
+      <strong>Structural Regularization Insight:</strong><br>
+      Constraining maximum tree depth to <code>max_depth = 10</code> reduced test RMSE from 3.8058% down to <strong>3.7069%</strong> while pruning away <strong>98.8% of all decision nodes</strong> (90,958 vs 7.55 million). Deep unconstrained tree splits fit to microscopic electrical noise and road surface vibration jitter; depth capping acts as a topological regularizer that enforces monotonic physical generalizations.
+    </div>
+
+    <h3 id="7-1-pruned-diagnostic-figures">7.1 Pareto & Pruning Visualizations</h3>
+    <figure class="doc-image">
+      <img src="RF_Pruned/results/plots/pareto_frontier_tradeoff.png" alt="Pareto Frontier Complexity vs Accuracy" loading="lazy">
+      <figcaption>Figure 7.1: Pareto Frontier Curve &mdash; Mapping total node complexity against test RMSE and Peak MAX Error, highlighting the optimal Depth 10 knee.</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_Pruned/results/plots/four_stage_evolution.png" alt="Four-Stage Research Evolution" loading="lazy">
+      <figcaption>Figure 7.2: Four-Stage Architecture Evolution &mdash; Progressive error suppression and complexity optimization from Baseline to Production-Pruned.</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_Pruned/results/plots/depth_sweep_comparison.png" alt="Depth Sweep Comparison Across Candidate Depths" loading="lazy">
+      <figcaption>Figure 7.3: Error metric profile across pruned depths, illustrating stable estimation accuracy across tree constraints.</figcaption>
+    </figure>
+
+    <figure class="doc-image">
+      <img src="RF_Pruned/results/plots/soc_estimation_pruned.png" alt="Pareto Pruned Model Actual vs Predicted SOC" loading="lazy">
+      <figcaption>Figure 7.4: Actual vs Predicted SOC tracking curve for the Depth 10 Pareto-optimal architecture across 118,974 unseen test samples.</figcaption>
+    </figure>
+    <hr>
+    <!-- ========================================================================= -->
+    <!-- PART 8: MASTER COMPARISON & CROSS-METHODOLOGICAL BENCHMARK                -->
+    <!-- ========================================================================= -->
+    <h2 id="part-8-master-synthesis">Part 8 — Cross-Methodological Synthesis & Four-Stage Benchmarking</h2>
     <p>Synthesizing all 5 implemented architectures across the identical 60-trip train (945,026 instances) and 10-trip test (118,974 instances) dataset:</p>
 
     <div class="table-container">
@@ -1748,15 +1848,26 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
         </thead>
         <tbody>
           <tr style="background-color: #ecfdf5;">
-            <td><strong>Temporal &amp; Physics RF (50 Trees)</strong></td>
-            <td><strong>19 Features</strong></td>
+            <td><strong>Pareto-Pruned RF (50 Trees, Depth 10)</strong></td>
+            <td><strong>17 Features</strong></td>
+            <td><strong>`3.7069%`</strong> &#127942;</td>
+            <td><strong>`2.8675%`</strong> &#127942;</td>
+            <td><strong>`16.4311%`</strong></td>
+            <td><strong>`3.6607%`</strong></td>
+            <td><strong>2.41 MB</strong> (1.04 MB C Flash)</td>
+            <td>&lt;0.05 ms</td>
+            <td><strong>Automotive Production Champion</strong>: Eliminates 98.8% of decision nodes (90,958 nodes) and compresses storage to 2.41 MB while improving RMSE to 3.7069% via structural noise regularization. Fits easily on 4 MB automotive ECUs (< 2 KB runtime RAM).</td>
+          </tr>
+          <tr style="background-color: #f0fdf4;">
+            <td><strong>Temporal &amp; Dynamic RF (50 Trees, Unconstrained)</strong></td>
+            <td><strong>17 Features</strong></td>
             <td><strong>`3.8500%`</strong> 🔻</td>
             <td><strong>`2.9666%`</strong> 🔻</td>
             <td><strong>`15.5543%`</strong> 🔻</td>
             <td><strong>`3.7979%`</strong></td>
             <td>542.4 MB</td>
             <td>&lt;0.06 ms</td>
-            <td><strong>State-of-the-Art Champion</strong>: Slashes peak MAX error down to 15.5543% (-41.73% reduction vs baseline) and delivers -34.61% total RMSE reduction via 19-feature temporal rolling memory, dynamic voltage sag, electrical power, and calibrated dual-polarization OCV.</td>
+            <td><strong>State-of-the-Art Champion</strong>: Slashes peak MAX error down to 15.5543% (-41.73% reduction vs baseline) and delivers -34.61% total RMSE reduction via 17-feature temporal rolling memory, dynamic voltage sag, instantaneous electrical power, and rate of change (dV/dt).</td>
           </tr>
           <tr style="background-color: #f3e8ff;">
             <td><strong>Enhanced Random Forest (50 Trees)</strong></td>
@@ -1808,70 +1919,10 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
     <hr>
 
     <!-- ========================================================================= -->
-    <!-- PART 8: INTERACTIVE BMS DIGITAL TWIN DASHBOARD                            -->
-    <!-- ========================================================================= -->
-    <h2 id="part-8-digital-twin-app">Part 8 — Interactive BMS Digital Twin Dashboard</h2>
-    <p>A full-stack interactive Battery Management System digital twin web application was engineered in <code>app/</code> to provide an intuitive visual environment for validating model inference in real time.</p>
-
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Dashboard Component</th>
-            <th>Technology / File</th>
-            <th>Interactive Capability</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Inference &amp; Stream Server</strong></td>
-            <td><code>app/server.py</code> (Python HTTP API)</td>
-            <td>Lightweight REST endpoint serving serialized model inference and streaming raw telemetry chunks for test routes.</td>
-          </tr>
-          <tr>
-            <td><strong>Instrument Cluster UI</strong></td>
-            <td><code>app/index.html</code></td>
-            <td>Modern single-page application displaying digital SOC gauges, voltage, current, battery temperature, and ambient monitors.</td>
-          </tr>
-          <tr>
-            <td><strong>Design System</strong></td>
-            <td><code>app/style.css</code></td>
-            <td>Clean ceramic background with deep pine and emerald accents, high-contrast digital readouts, and responsive layout.</td>
-          </tr>
-          <tr>
-            <td><strong>60 FPS Playback Engine</strong></td>
-            <td><code>app/app.js</code> (Canvas API)</td>
-            <td>High-performance client-side rendering replaying driving cycles second-by-second with pause, scrub, and speed multiplier controls.</td>
-          </tr>
-          <tr>
-            <td><strong>Live Model Comparison</strong></td>
-            <td><code>app/app.js</code></td>
-            <td>Real-time side-by-side trajectory plotting of Actual SOC vs Random Forest vs Decision Tree vs KNN.</td>
-          </tr>
-          <tr>
-            <td><strong>What-If Scenario Sandbox</strong></td>
-            <td><code>app/app.js</code></td>
-            <td>Interactive hardware simulation allowing engineers to manipulate slider values for Voltage, Current, and Temperature to inspect live model response.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <p>To launch the interactive dashboard locally:</p>
-    <pre><code class="language-bash">python app/server.py
-# Open browser at: http://localhost:8000</code></pre>
-    <hr>
-
-    <!-- ========================================================================= -->
     <!-- PART 9: REPOSITORY ARCHITECTURE & MODULE DIRECTORY                        -->
     <!-- ========================================================================= -->
     <h2 id="part-9-project-structure">Part 9 — Repository Structure & Module Directory</h2>
     <pre><code class="language-">EV_HEV/
-├── app/                              # Interactive BMS Digital Twin Dashboard
-│   ├── server.py                     # Lightweight HTTP API server (inference & trip streamer)
-│   ├── index.html                    # Single-page instrument cluster UI
-│   ├── style.css                     # Custom design system (ceramic & deep pine palette)
-│   └── app.js                        # Client-side 60fps replayer & Canvas charting engine
 ├── archive/                          # Raw dataset (70 trip CSV files)
 │   ├── TripA01.csv ... TripA32.csv   #   Series A: 32 trips
 │   └── TripB01.csv ... TripB38.csv   #   Series B: 38 trips
@@ -1897,8 +1948,8 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
 │   │   └── results.json              # Multi-seed metrics & baseline comparison
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_Temporal/                      # State-of-the-Art 19-Feature Temporal & Physics Model
-│   ├── README.md                     # Dedicated 19-feature documentation & physical derivation
+├── RF_Temporal/                      # State-of-the-Art 17-Feature Temporal & Dynamic Model
+│   ├── README.md                     # Dedicated 17-feature documentation & analysis
 │   ├── results/
 │   │   ├── models/
 │   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model (542.4 MB)
@@ -1930,59 +1981,9 @@ V_est_ocv_full = V_terminal - (I_current * r_ohmic) - (I_mean_15s * r_pol)</code
     <hr>
 
     <!-- ========================================================================= -->
-    <!-- PART 10: NEXT STEPS & INDUSTRIAL TRAJECTORY                               -->
+    <!-- PART 10: ATTRIBUTION, LITERATURE REFERENCES & LICENSE                      -->
     <!-- ========================================================================= -->
-    <h2 id="part-10-next-steps">Part 10 — Next Steps & Future Research Levers</h2>
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Priority</th>
-            <th>Research Lever</th>
-            <th>Description</th>
-            <th>Anticipated Engineering Impact</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>High</strong></td>
-            <td><strong>Temporal Sliding Windows &amp; Derivatives</strong><br><span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;display:inline-block;margin-top:4px;border:1px solid #a7f3d0;">Implemented &amp; Validated in Part 6 (RF_Temporal)</span></td>
-            <td>Engineer 19 time-series features: rolling statistical windows (15s, 60s, 180s mean/std), first-order derivatives (<em>dV/dt</em>, <em>dI/dt</em>), dynamic voltage sag, instantaneous electrical power, and calibrated dual-polarization OCV.</td>
-            <td>Reduced RMSE from ~4.57% down to 3.8500% and slashed peak MAX error from ~27% down to 15.5543% by resolving electrochemical polarization hysteresis and internal resistance voltage collapse.</td>
-          </tr>
-          <tr>
-            <td><strong>High</strong></td>
-            <td><strong>Non-Linear SOC Boundary &amp; Transient Sample Weighting</strong><br><span style="background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;display:inline-block;margin-top:4px;border:1px solid #a7f3d0;">Implemented &amp; Validated in Part 6 (RF_Temporal)</span></td>
-            <td>Apply non-uniform sample weights (2.0&times; for severe discharge <em>I</em> &lt; &minus;80 A, 2.0&times; for cold battery <em>T</em><sub>batt</sub> &le; 5 &deg;C, 3.0&times; for voltage collapse outliers) during Random Forest tree building.</td>
-            <td>Directly suppressed peak transient error spikes in extreme operating zones while strictly preserving standard tree regression structure.</td>
-          </tr>
-          <tr>
-            <td><strong>Medium</strong></td>
-            <td><strong>Thermal Regime Clustering</strong></td>
-            <td>Train dedicated ensemble models specialized by ambient thermal clusters (Sub-zero &lt;0&deg;C, Moderate 10&ndash;25&deg;C, Extreme Heat &gt;30&deg;C).</td>
-            <td>Compensates for severe non-linear Arrhenius shifts in cell internal impedance during extreme winter cold or summer heat waves.</td>
-          </tr>
-          <tr>
-            <td><strong>Medium</strong></td>
-            <td><strong>Dynamic State Post-Filtering (1D Kalman / EMA)</strong></td>
-            <td>Couple the raw Random Forest output with a lightweight 1D Extended Kalman Filter or Exponential Moving Average time-series smoother.</td>
-            <td>Eliminates high-frequency tree decision jitter and enforces monotonic charge-depletion physical constraints, reducing RMSE by ~0.2%–0.4%.</td>
-          </tr>
-          <tr>
-            <td><strong>Medium</strong></td>
-            <td><strong>MCU Tree Quantization &amp; Pruning</strong></td>
-            <td>Apply post-training cost-complexity pruning (CCP) and 16-bit integer quantization to compress the model footprint for automotive microcontrollers.</td>
-            <td>Enables direct deployment onto low-cost automotive microcontrollers (e.g., STM32, TI TMS570) without requiring external memory chips.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <hr>
-
-    <!-- ========================================================================= -->
-    <!-- PART 11: ATTRIBUTION, LITERATURE REFERENCES & LICENSE                      -->
-    <!-- ========================================================================= -->
-    <h2 id="part-11-attribution">Part 11 — Attribution, Literature References & License</h2>
+    <h2 id="part-10-attribution">Part 10 — Attribution, Literature References & License</h2>
     <h3 id="academic-attribution">Academic Literature Citation</h3>
     <p>This implementation reproduces and expands upon the methodology published in peer-reviewed literature:</p>
     <blockquote>

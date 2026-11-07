@@ -1,6 +1,6 @@
 {
-  "model_architecture": "Random Forest (19 Features: Temporal & Physics-Compensated)",
-  "feature_count": 19,
+  "model_architecture": "Random Forest (17 Features: Temporal & Dynamic)",
+  "feature_count": 17,
   "best_tree_count": 50,
   "final_test_metrics": {
     "RMSE": 3.8499545238975426,

@@ -1,20 +1,22 @@
 """
 config.py
 =========
-Central configuration for the 15-Feature Temporal & Dynamic Random Forest model (RF_Temporal).
+Central configuration for the 17-Feature Temporal & Dynamic Random Forest model (RF_Temporal).
 
 Feature Architecture:
-  - 4 Baseline Observables (Electrochemistry & Thermal)
+  - 4 Baseline Observables (Voltage, Current, Battery Temp, Ambient Temp)
   - 3 Powertrain & Kinematics (Throttle, Torque, Velocity)
-  - 8 Temporal, Dynamic & Physics-Compensated Features:
+  - 10 Temporal & Dynamic Signals:
       * dV_dt: Instantaneous voltage rate-of-change
       * dI_dt: Instantaneous current rate-of-change
-      * V_mean_15s: 15-second rolling average of Pack Voltage (local smoother)
+      * V_mean_15s: 15-second rolling average of Pack Voltage
       * I_mean_15s: 15-second rolling average of Pack Current
       * V_std_15s: 15-second rolling standard deviation of Pack Voltage
-      * V_mean_60s: 60-second rolling average of Pack Voltage (macro baseline anchor)
+      * V_mean_60s: 60-second rolling average of Pack Voltage
       * I_mean_60s: 60-second rolling average of Pack Current
-      * V_est_ocv: Temperature-compensated Open-Circuit Voltage estimate [V - I * R(T)]
+      * V_mean_180s: 180-second rolling average of Pack Voltage
+      * V_sag_60s: 60-second dynamic voltage sag
+      * Power: Instantaneous electrical power
 """
 
 import os
@@ -66,7 +68,7 @@ POWERTRAIN_FEATURES = [
     FEATURE_VELOCITY,
 ]
 
-# 3. Temporal, Dynamic & Physics-Compensated Features
+# 3. Temporal & Dynamic Features
 FEATURE_DV_DT = "dV_dt [V/s]"
 FEATURE_DI_DT = "dI_dt [A/s]"
 FEATURE_V_MEAN_15S = "V_mean_15s [V]"
@@ -95,7 +97,7 @@ TEMPORAL_FEATURES = [
     FEATURE_V_EST_OCV_FULL,
 ]
 
-# Full 19-feature input matrix
+# Full feature input matrix
 ALL_15_FEATURES = BASELINE_FEATURES + POWERTRAIN_FEATURES + TEMPORAL_FEATURES
 ALL_FEATURES = ALL_15_FEATURES  # Alias for consistency
 RF_FEATURE_NAMES = ALL_FEATURES

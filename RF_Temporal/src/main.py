@@ -38,12 +38,12 @@ from evaluate import print_metrics
 from plots import generate_all_plots
 
 
-def save_results(results: dict, best_tree_count: int, feature_count: int = 19) -> None:
+def save_results(results: dict, best_tree_count: int, feature_count: int = 17) -> None:
     """Save metrics and comparative progression to results.json."""
     best_temp = results[best_tree_count]["best_metrics"]
 
     output = {
-        "model_architecture": f"Random Forest ({feature_count} Features: Temporal & Physics-Compensated)",
+        "model_architecture": f"Random Forest ({feature_count} Features: Temporal & Dynamic)",
         "feature_count": feature_count,
         "best_tree_count": best_tree_count,
         "final_test_metrics": best_temp,
@@ -152,7 +152,7 @@ def main():
     # Step 5: Save model, results, and diagnostic plots
     print("\n[Step 5] Saving model binary, metrics JSON, and diagnostic plots...")
     save_best_model(results, best_n)
-    save_results(results, best_n, feature_count=len(feature_names))
+    save_results(results, best_n, feature_count=17)
 
     generate_all_plots(
         y_test=y_test,

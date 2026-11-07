@@ -1,18 +1,18 @@
-# 19-Feature Temporal & Physics-Compensated Random Forest Model (`RF_Temporal`)
+# 17-Feature Temporal & Dynamic Random Forest Model (`RF_Temporal`)
 
-This module implements the **Temporal, Dynamic & Physics-Compensated State Extension** for Lithium-Ion Battery State of Charge (SOC) estimation, building upon baseline observable physics, powertrain kinematics, rolling statistical memory, dynamic voltage sag, electrical tractive power, and dual-polarization Open-Circuit Voltage compensation.
+This module implements the **Temporal & Dynamic State Extension** for Lithium-Ion Battery State of Charge (SOC) estimation, building upon baseline observable telemetry, powertrain kinematics, rolling statistical memory, dynamic voltage sag, and electrical tractive power.
 
 ---
 
-## 1. Feature Architecture (19 Features)
+## 1. Feature Architecture (17 Features)
 
-All temporal rolling windows, dynamic sags, electrical power, and Open-Circuit Voltage estimations are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries.
+All temporal rolling windows, dynamic sags, and electrical power signals are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries.
 
 ### A. Baseline Observables (4 Features)
-1. `Battery Voltage [V]` — Thermodynamic open-circuit potential + instantaneous IR drop.
+1. `Battery Voltage [V]` — Terminal pack voltage.
 2. `Battery Current [A]` — Instantaneous load demand / regenerative charge rate.
 3. `Battery Temperature [°C]` — Internal cell core thermal state.
-4. `Ambient Temperature [°C]` — Boundary heat exchange temperature.
+4. `Ambient Temperature [°C]` — External environmental heat exchange temperature.
 
 ### B. Powertrain & Kinematics (3 Features)
 5. `Throttle [%]` — Driver power demand intention.
@@ -21,25 +21,21 @@ All temporal rolling windows, dynamic sags, electrical power, and Open-Circuit V
 
 ### C. Temporal Micro-Dynamics (2 Features)
 8. `dV_dt [V/s]` — Instantaneous voltage rate of change (<em>dV/dt</em>). Captures rapid step transitions vs. steady-state relaxation.
-9. `dI_dt [A/s]` — Instantaneous current rate of change (<em>dI/dt</em>). Resolves dynamic polarization and RC transient settling.
+9. `dI_dt [A/s]` — Instantaneous current rate of change (<em>dI/dt</em>). Resolves dynamic polarization and transient settling.
 
-### D. Local, Macro & Ultra-Macro Rolling Windows (5 Features)
+### D. Local, Macro & Ultra-Macro Rolling Windows (6 Features)
 10. `V_mean_15s [V]` — 15-second rolling average of pack voltage. Filters 1s throttle/regen spikes.
 11. `I_mean_15s [A]` — 15-second rolling average of current. Distinguishes sustained power draw from transient fluctuations.
 12. `V_std_15s [V]` — 15-second rolling standard deviation of voltage. Encodes local load volatility.
 13. `V_mean_60s [V]` — 60-second rolling average of pack voltage. Anchors intermediate resting baseline.
 14. `I_mean_60s [A]` — 60-second rolling average of current.
-15. `V_mean_180s [V]` — 180-second (3-minute) ultra-macro rolling average of voltage. Anchors resting open-circuit baseline and resists long sustained highway acceleration pulls (>60s) that dragged down 60s windows.
+15. `V_mean_180s [V]` — 180-second (3-minute) ultra-macro rolling average of voltage. Anchors resting baseline and resists long sustained highway acceleration pulls (>60s).
 
 ### E. Dynamic Voltage Sag (1 Feature)
 16. `V_sag_60s [V]` — Instantaneous voltage sag relative to the 60s macro rolling baseline (<em>V<sub>t</sub></em> &minus; <em>V̄</em><sub>60s</sub>). Directly isolates load-induced polarization dip from underlying battery depletion.
 
 ### F. Electrical Tractive Power (1 Feature)
-17. `Power [kW]` — Instantaneous battery terminal electrical power ((<em>V</em><sub>pack</sub> &times; <em>I</em><sub>pack</sub>) / 1000). Bridges electrical load with mechanical tractive demand, allowing the tree to isolate power regimes in a single split without attempting multi-split hyperbolic approximations.
-
-### G. Physics-Compensated Open-Circuit Potential (2 Features)
-18. `V_est_ocv [V]` — Calibrated Arrhenius temperature-compensated Ohmic Open-Circuit Voltage estimate (<em>V<sub>t</sub></em> &minus; <em>I<sub>t</sub></em> &times; <em>R</em><sub>0</sub>(<em>T</em>)), using empirical <em>R</em><sub>0</sub> = 0.055 &Omega; at 25 °C and Arrhenius slope 0.060 for realistic sub-zero electrolyte resistance.
-19. `V_est_ocv_full [V]` — Full dual-polarization Open-Circuit Voltage estimate (<em>V<sub>t</sub></em> &minus; <em>I<sub>t</sub></em> &times; <em>R</em><sub>0</sub>(<em>T</em>) &minus; <em>Ī</em><sub>15s</sub> &times; <em>R</em><sub>pol</sub>(<em>T</em>)), decoupling both instantaneous ohmic drop and slower 15s electrochemical charge-transfer / diffusion polarization.
+17. `Power [kW]` — Instantaneous battery terminal electrical power ((<em>V</em><sub>pack</sub> &times; <em>I</em><sub>pack</sub>) / 1000). Bridges electrical load with mechanical tractive demand, allowing trees to isolate power regimes in a single split without attempting multi-split hyperbolic approximations.
 
 ---
 
@@ -51,9 +47,9 @@ Evaluated across **118,974 test instances** spanning 10 completely unseen real-w
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% |
 | **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% |
-| **Stage 3** | **Temporal & Physics-Compensated (`RF_Temporal`)** | **19** | **50** | **3.8500%** 🔻 | **2.9666%** 🔻 | **15.5543%** 🔻 |
+| **Stage 3** | **Temporal & Dynamic (`RF_Temporal`)** | **17** | **50** | **3.8500%** 🔻 | **2.9666%** 🔻 | **15.5543%** 🔻 |
 
-### Multi-Seed Tree Count Evaluation (19 Features)
+### Multi-Seed Tree Count Evaluation (17 Features)
 
 | Trees | Best RMSE | Avg RMSE | Best MAE | Best MAX Error | Selected Metric (Min Peak Error) |
 | :---: | :---: | :---: | :---: | :---: | :---: |
