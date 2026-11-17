@@ -1,12 +1,12 @@
 """
 config.py
 =========
-Central configuration for the 17-Feature Temporal & Dynamic Random Forest model (RF_Temporal).
+Central configuration for the 19-Feature Temporal & Electrochemical Physics Random Forest model (RF_Temporal).
 
 Feature Architecture:
   - 4 Baseline Observables (Voltage, Current, Battery Temp, Ambient Temp)
   - 3 Powertrain & Kinematics (Throttle, Torque, Velocity)
-  - 10 Temporal & Dynamic Signals:
+  - 12 Temporal, Dynamic & Electrochemical Signals:
       * dV_dt: Instantaneous voltage rate-of-change
       * dI_dt: Instantaneous current rate-of-change
       * V_mean_15s: 15-second rolling average of Pack Voltage
@@ -17,6 +17,8 @@ Feature Architecture:
       * V_mean_180s: 180-second rolling average of Pack Voltage
       * V_sag_60s: 60-second dynamic voltage sag
       * Power: Instantaneous electrical power
+      * V_est_ocv: Ohmic-compensated Open-Circuit Voltage estimate (Vt - I*R_0)
+      * V_est_ocv_full: Dual-polarization compensated OCV estimate (Vt - I*R_0 - I_15s*R_pol)
 """
 
 import os
@@ -42,7 +44,7 @@ CSV_SEPARATOR = ";"
 CSV_ENCODING = "latin1"
 
 # ----------------------------------------------
-# Feature Definitions (15 Features Total)
+# Feature Definitions (19 Features Total)
 # ----------------------------------------------
 # 1. Baseline 4 Features
 FEATURE_VOLTAGE = "Battery Voltage [V]"
@@ -68,7 +70,7 @@ POWERTRAIN_FEATURES = [
     FEATURE_VELOCITY,
 ]
 
-# 3. Temporal & Dynamic Features
+# 3. Temporal, Dynamic & Electrochemical Physics Features
 FEATURE_DV_DT = "dV_dt [V/s]"
 FEATURE_DI_DT = "dI_dt [A/s]"
 FEATURE_V_MEAN_15S = "V_mean_15s [V]"
@@ -98,8 +100,9 @@ TEMPORAL_FEATURES = [
 ]
 
 # Full feature input matrix
-ALL_15_FEATURES = BASELINE_FEATURES + POWERTRAIN_FEATURES + TEMPORAL_FEATURES
-ALL_FEATURES = ALL_15_FEATURES  # Alias for consistency
+ALL_19_FEATURES = BASELINE_FEATURES + POWERTRAIN_FEATURES + TEMPORAL_FEATURES
+ALL_15_FEATURES = ALL_19_FEATURES  # Alias for backward compatibility
+ALL_FEATURES = ALL_19_FEATURES  # Alias for consistency
 RF_FEATURE_NAMES = ALL_FEATURES
 
 # Target variable (manufacturer-estimated SOC)

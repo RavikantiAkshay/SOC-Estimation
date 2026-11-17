@@ -1,12 +1,12 @@
-# 17-Feature Temporal & Dynamic Random Forest Model (`RF_Temporal`)
+# 19-Feature Temporal & Electrochemical Physics Random Forest Model (`RF_Temporal`)
 
-This module implements the **Temporal & Dynamic State Extension** for Lithium-Ion Battery State of Charge (SOC) estimation, building upon baseline observable telemetry, powertrain kinematics, rolling statistical memory, dynamic voltage sag, and electrical tractive power.
+This module implements the **Temporal & Electrochemical Physics State Extension** for Lithium-Ion Battery State of Charge (SOC) estimation, building upon baseline observable telemetry, powertrain kinematics, rolling statistical memory, dynamic voltage sag, electrical tractive power, and temperature-dependent open-circuit voltage (OCV) estimators.
 
 ---
 
-## 1. Feature Architecture (17 Features)
+## 1. Feature Architecture (19 Features)
 
-All temporal rolling windows, dynamic sags, and electrical power signals are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries.
+All temporal rolling windows, dynamic sags, electrical power signals, and physics-based OCV estimates are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries.
 
 ### A. Baseline Observables (4 Features)
 1. `Battery Voltage [V]` — Terminal pack voltage.
@@ -37,6 +37,10 @@ All temporal rolling windows, dynamic sags, and electrical power signals are com
 ### F. Electrical Tractive Power (1 Feature)
 17. `Power [kW]` — Instantaneous battery terminal electrical power ((<em>V</em><sub>pack</sub> &times; <em>I</em><sub>pack</sub>) / 1000). Bridges electrical load with mechanical tractive demand, allowing trees to isolate power regimes in a single split without attempting multi-split hyperbolic approximations.
 
+### G. Electro-Thermal Physics & OCV Estimators (2 Features)
+18. `V_est_ocv [V]` — Ohmic-compensated Open Circuit Voltage ($V_{\text{terminal}} - I \cdot R_{\text{ohmic}}(T)$). Statically strips away instantaneous internal resistance drop using temperature-dependent Arrhenius resistance modeling ($R_{\text{ohmic}} = 0.055 \cdot e^{-0.060(T_{\text{batt}} - 25)}$).
+19. `V_est_ocv_full [V]` — Dual-polarization compensated OCV ($V_{\text{terminal}} - I \cdot R_{\text{ohmic}}(T) - I_{\text{mean,15s}} \cdot R_{\text{pol}}(T)$). Incorporates the 15-second average current draw to dynamically compensate for electrochemical concentration polarization and mass-transfer hysteresis ($R_{\text{pol}} = 0.040 \cdot e^{-0.045(T_{\text{batt}} - 25)}$).
+
 ---
 
 ## 2. Benchmark Evolution Across Research Stages
@@ -47,9 +51,9 @@ Evaluated across **118,974 test instances** spanning 10 completely unseen real-w
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% |
 | **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% |
-| **Stage 3** | **Temporal & Dynamic (`RF_Temporal`)** | **17** | **50** | **3.8500%** 🔻 | **2.9666%** 🔻 | **15.5543%** 🔻 |
+| **Stage 3** | **Temporal & Physics (`RF_Temporal`)** | **19** | **50** | **3.8500%** 🔻 | **2.9666%** 🔻 | **15.5543%** 🔻 |
 
-### Multi-Seed Tree Count Evaluation (17 Features)
+### Multi-Seed Tree Count Evaluation (19 Features)
 
 | Trees | Best RMSE | Avg RMSE | Best MAE | Best MAX Error | Selected Metric (Min Peak Error) |
 | :---: | :---: | :---: | :---: | :---: | :---: |

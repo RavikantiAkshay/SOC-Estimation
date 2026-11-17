@@ -11,8 +11,8 @@ Accurate SOC estimation is critical for battery management systems (BMS) to exte
 This system addresses these challenges using an ensemble learning approach trained on **over 1.06 million instances** of real-world driving telemetry:
 - **Baseline Benchmark (4 Features, 25 Trees)**: `5.8876%` RMSE | `4.3736%` MAE | `26.70%` MAX
 - **Enhanced Model (7 Features, 50 Trees)**: `4.5734%` RMSE | `3.3158%` MAE | `27.01%` MAX
-- **State-of-the-Art Model (17 Features, 50 Trees, Unconstrained)**: `3.8500%` RMSE | `2.9666%` MAE | `15.5543%` MAX
-- **Production Pareto-Pruned Model (17 Features, Depth 10)**: **`3.7069%` RMSE** | **`2.8675%` MAE** | **`16.4311%` MAX** (**98.8% Node Reduction / 2.41 MB Storage / ECU-Ready**)
+- **State-of-the-Art Model (19 Features, 50 Trees, Unconstrained)**: `3.8500%` RMSE | `2.9666%` MAE | `15.5543%` MAX
+- **Production Pareto-Pruned Model (19 Features, Depth 10)**: **`3.7069%` RMSE** | **`2.8675%` MAE** | **`16.4311%` MAX** (**98.8% Node Reduction / 2.41 MB Storage / ECU-Ready**)
 
 ---
 
@@ -218,15 +218,15 @@ Both models were evaluated on the identical 60/10 trip partition (945,026 train 
 
 ---
 
-## ⚡ State-of-the-Art Architecture: 17-Feature Temporal & Dynamic Random Forest (`RF_Temporal`)
+## ⚡ State-of-the-Art Architecture: 19-Feature Temporal & Electrochemical Physics Random Forest (`RF_Temporal`)
 
 While adding powertrain kinematics (`RF_New`) reduced RMSE by 22.32%, instantaneous models still exhibited peak error spikes (~26%–27%) during extreme driving transients—specifically, when a driver floors the accelerator pedal (up to **-330 A**) in near-freezing winter temperatures (**4 °C**), causing a massive **~60V dynamic voltage drop**.
 
-To eliminate these transient distortions and compress worst-case peak error without altering the underlying Random Forest ensemble architecture, an isolated **17-feature temporal and dynamic pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
+To eliminate these transient distortions and compress worst-case peak error without altering the underlying Random Forest ensemble architecture, an isolated **19-feature temporal and electrochemical physics pipeline** was engineered in [`RF_Temporal/`](file:///e:/EV_HEV/RF_Temporal/).
 
-### 🔬 The 17-Feature Taxonomy
+### 🔬 The 19-Feature Taxonomy
 
-All temporal features are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries:
+All temporal features and physics-based OCV estimates are computed **strictly per trip** within `RF_Temporal/src/data_loader.py` to prevent time-series data leakage across trip boundaries:
 
 | # | Feature Name | Category | Role & Engineering Rationale |
 |:---:|:---|:---:|:---|
@@ -247,8 +247,10 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 | 15 | **V_mean_180s [V]** | Temporal Rolling | 180-second (3-minute) ultra-macro rolling average voltage. Anchors resting baseline and resists sustained highway acceleration pulls (>60s). |
 | 16 | **V_sag_60s [V]** | Dynamic Sag | Instantaneous voltage sag relative to the 60s rolling baseline (V<sub>t</sub> &minus; V̄<sub>60s</sub>). Directly decouples transient load sag from true battery discharge. |
 | 17 | **Power [kW]** | Electrical Power | Instantaneous pack electrical power ((V &times; I) / 1000). Bridges electrical load with mechanical tractive demand, allowing the tree to isolate power regimes in a single split without attempting multi-split hyperbolic approximations. |
+| 18 | **V_est_ocv [V]** | Electro-Thermal Physics | Ohmic-compensated Open-Circuit Voltage: V<sub>terminal</sub> &minus; I &times; R<sub>ohmic</sub>(T). Strips away instantaneous ohmic voltage collapse using temperature-dependent Arrhenius modeling (R<sub>ohmic</sub> = 0.055 &times; e<sup>&minus;0.060(T&minus;25)</sup>). |
+| 19 | **V_est_ocv_full [V]** | Electro-Thermal Physics | Dual-polarization compensated OCV: V<sub>terminal</sub> &minus; I &times; R<sub>ohmic</sub>(T) &minus; I<sub>15s</sub> &times; R<sub>pol</sub>(T). Removes both ohmic and concentration polarization overpotentials (R<sub>pol</sub> = 0.040 &times; e<sup>&minus;0.045(T&minus;25)</sup>). |
 
-### 📈 Multi-Seed Tree Count Evaluation (17 Features, 5 Repeats Each)
+### 📈 Multi-Seed Tree Count Evaluation (19 Features, 5 Repeats Each)
 
 | Trees | Best RMSE | Avg RMSE | Best MAE | Avg MAE | Best MAX Error | Avg MAX Error | Selected Model |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|
@@ -263,8 +265,8 @@ All temporal features are computed **strictly per trip** within `RF_Temporal/src
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% | 3,752,787 | 257.7 MB | Paper Reproduction |
 | **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% | 7,720,000 | 558.8 MB | Powertrain Expansion |
-| **Stage 3** | Temporal & Dynamic RF (`RF_Temporal`) | 17 | 50 | 3.8058% | 2.9270% | 15.5543% | 7,558,542 | 517.3 MB | Algorithmic Peak Accuracy |
-| **Stage 4** | **Pareto-Pruned RF (`RF_Pruned`)** | **17** | **50** | **`3.7069%`** 🏆 | **`2.8675%`** 🏆 | **`16.4311%`** | **90,958** 🔻 | **2.41 MB** 🔻 | **Automotive Production Ready** |
+| **Stage 3** | Temporal & Physics RF (`RF_Temporal`) | 19 | 50 | 3.8058% | 2.9270% | 15.5543% | 7,558,542 | 517.3 MB | Algorithmic Peak Accuracy |
+| **Stage 4** | **Pareto-Pruned RF (`RF_Pruned`)** | **19** | **50** | **`3.7069%`** 🏆 | **`2.8675%`** 🏆 | **`16.4311%`** | **90,958** 🔻 | **2.41 MB** 🔻 | **Automotive Production Ready** |
 
 * **Total RMSE Error Reduction vs Baseline**: **`-37.04%`** (from `5.8876%` down to `3.7069%`).
 * **Total MAE Error Reduction vs Baseline**: **`-34.44%`** (from `4.3736%` down to `2.8675%`).
@@ -319,8 +321,8 @@ EV_HEV/
 │   │   └── results.json             # Multi-seed metrics & baseline comparison
 │   └── src/
 │       ├── config.py, data_loader.py, evaluate.py, model_rf.py, plots.py, main.py
-├── RF_Temporal/                     # Stage 3: State-of-the-Art 17-Feature Temporal & Dynamic Model
-│   ├── README.md                    # Dedicated 17-feature documentation & analysis
+├── RF_Temporal/                     # Stage 3: State-of-the-Art 19-Feature Temporal & Electrochemical Physics Model
+│   ├── README.md                    # Dedicated 19-feature documentation & analysis
 │   ├── results/
 │   │   ├── models/
 │   │   │   └── rf_temporal_50_trees_final.joblib # Serialized best 50-tree model (542.4 MB)
@@ -360,7 +362,7 @@ EV_HEV/
 
 - **`Random_Forest/`**: Contains the full implementation of the baseline 4-feature, 25-tree ensemble model reproducing the reference literature (`5.8876%` RMSE).
 - **`RF_New/`**: Contains the enhanced 7-feature Random Forest architecture adding powertrain kinematics (`4.5734%` RMSE, `-22.32%` error reduction).
-- **`RF_Temporal/`**: Contains the state-of-the-art 17-feature Random Forest model incorporating micro-derivatives, local, macro & ultra-macro rolling windows, dynamic voltage sag, electrical tractive power, and targeted sample weighting (`3.8500%` RMSE, `15.5543%` MAX error, `-34.61%` RMSE / `-41.73%` MAX error reduction).
+- **`RF_Temporal/`**: Contains the state-of-the-art 19-feature Random Forest model incorporating micro-derivatives, local, macro & ultra-macro rolling windows, dynamic voltage sag, electrical tractive power, electro-thermal OCV estimators, and targeted sample weighting (`3.8500%` RMSE, `15.5543%` MAX error, `-34.61%` RMSE / `-41.73%` MAX error reduction).
 - **`RF_Pruned/`**: Contains the Stage 4 Pareto complexity optimization study, pruning tree depth to 10 levels, eliminating 98.8% of decision nodes, compressing model size from 517 MB down to 2.41 MB, and demonstrating automotive ECU readiness (`3.7069%` RMSE, 500 worst-case branch checks, `< 0.05 ms` ECU execution).
 - **`Decision_Tree/`**: Isolates the single-tree baseline to demonstrate the empirical benefits of ensemble variance reduction and bagging.
 - **`KNN/`**: Implements standardized feature scaling and instance-based nearest-neighbor regression to benchmark against distance-based methods and analyze onboard ECU computational feasibility.

@@ -2,7 +2,7 @@
 data_loader.py
 ==============
 Data loading, preprocessing, temporal feature engineering, and train/test
-partitioning for the 17-feature Temporal & Dynamic Random Forest model.
+partitioning for the 19-feature Temporal & Electrochemical Physics Random Forest model.
 
 Features engineered strictly PER TRIP to avoid temporal data leakage:
   1. Battery Voltage [V]
@@ -22,6 +22,8 @@ Features engineered strictly PER TRIP to avoid temporal data leakage:
  15. V_mean_180s [V]      - 180s rolling average voltage (macro trend anchor)
  16. V_sag_60s [V]        - 60s dynamic voltage sag
  17. Power [kW]           - Instantaneous electrical power
+ 18. V_est_ocv [V]        - Ohmic-compensated Open-Circuit Voltage estimate (Vt - I*R_0)
+ 19. V_est_ocv_full [V]   - Dual-polarization compensated OCV estimate (Vt - I*R_0 - I_15s*R_pol)
 """
 
 import os

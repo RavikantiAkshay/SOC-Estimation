@@ -6,7 +6,7 @@ This module implements **Stage 4 (Pareto Pruning & Optimization)**: systematic d
 
 ## 1. Executive Summary & Problem Formulation
 
-While the **17-Feature Temporal & Dynamic Model (`RF_Temporal`)** pushed SOC estimation accuracy to state-of-the-art levels (RMSE = 3.85%, Peak MAX error = 15.55%), unconstrained decision trees grew to an average depth of **~49 levels**, accumulating over **7.55 million decision nodes** and requiring a **517 MB** serialized model binary.
+While the **19-Feature Temporal & Electrochemical Physics Model (`RF_Temporal`)** pushed SOC estimation accuracy to state-of-the-art levels (RMSE = 3.85%, Peak MAX error = 15.55%), unconstrained decision trees grew to an average depth of **~49 levels**, accumulating over **7.55 million decision nodes** and requiring a **517 MB** serialized model binary.
 
 In production automotive microcontrollers (e.g., **Infineon AURIX TC3xx, NXP S32K, ARM Cortex-M**):
 - **Flash / ROM storage** is strictly constrained (typically 2 MB to 8 MB total).
@@ -37,7 +37,7 @@ To resolve this bottleneck, we conducted an empirical **Pareto Complexity Analys
    Model file footprint collapses from **517 MB down to 2.41 MB**, comfortably fitting in standard memory architectures.
 4. **Automotive Microcontroller Compatibility**:
    - **Flash Requirement in C**: **`1.04 MB`** (using flat static arrays: `struct Node { uint8_t feat; float thresh; uint16_t left; uint16_t right; }`).
-   - **Active RAM at Runtime**: **`< 2 KB`** (only 17 floats input buffer + 180s ring buffer + traversal stack).
+   - **Active RAM at Runtime**: **`< 2 KB`** (only 19 floats input buffer + 180s ring buffer + traversal stack).
    - **Deterministic WCET Path**: **`500 branch checks per sample`** (a **5.0× reduction in execution path** vs. 2,450 unpruned checks, taking **`< 0.05 ms`** on a 100 MHz automotive MCU core, well within the vehicle's 100 ms CAN task budget).
 
 ---
@@ -48,8 +48,8 @@ To resolve this bottleneck, we conducted an empirical **Pareto Complexity Analys
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
 | **Stage 1** | Baseline Random Forest | 4 | 25 | 5.8876% | 4.3736% | 26.6956% | 3,752,787 | 257.7 MB | Literature Reproduction (Sulaiman 2024) |
 | **Stage 2** | Enhanced Random Forest (`RF_New`) | 7 | 50 | 4.5734% | 3.3158% | 27.0113% | 7,720,000 | 558.8 MB | Powertrain Kinematics Expansion |
-| **Stage 3** | Temporal & Dynamic RF (`RF_Temporal`) | 17 | 50 | 3.8058% | 2.9270% | 15.5543% | 7,558,542 | 517.3 MB | State-of-the-Art Accuracy & Memory |
-| **Stage 4** | **Pareto-Pruned RF (`RF_Pruned`)** | **17** | **50** | **3.7069%** 🏆 | **2.8675%** 🏆 | **16.4311%** | **90,958** 🔻 | **2.41 MB** 🔻 | **Automotive Production & ECU Sizing** |
+| **Stage 3** | Temporal & Physics RF (`RF_Temporal`) | 19 | 50 | 3.8058% | 2.9270% | 15.5543% | 7,558,542 | 517.3 MB | State-of-the-Art Accuracy & Physics |
+| **Stage 4** | **Pareto-Pruned RF (`RF_Pruned`)** | **19** | **50** | **3.7069%** 🏆 | **2.8675%** 🏆 | **16.4311%** | **90,958** 🔻 | **2.41 MB** 🔻 | **Automotive Production & ECU Sizing** |
 
 ---
 
